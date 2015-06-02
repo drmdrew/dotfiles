@@ -49,7 +49,7 @@ function! s:syncTree()
     wincmd p
   endif
 endfunction
-autocmd BufEnter * call s:syncTree()
+autocmd BufRead * call s:syncTree()
 
 " GIT
 autocmd BufReadPost fugitive://* set bufhidden=delete
