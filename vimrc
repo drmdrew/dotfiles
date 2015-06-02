@@ -1,3 +1,17 @@
+" drmdrew .vimrc
+"
+" plugins installed:
+"  colorschemes
+"  command-t
+"  jshint.vim
+"  nerdtree
+"  nerdtree-git-plugin
+"  vim-airline
+"  vim-fugitive
+"  vim-json
+"  vim-puppet
+"  vim-unimpaired
+
 " setup pathogen (tpope)
 execute pathogen#infect()
 
