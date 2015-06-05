@@ -44,7 +44,7 @@ let g:vim_json_syntax_conceal = 0
 set hlsearch
 
 " searching/filtering
-set wildignore+=**/node_modules/*
+set wildignore+=**/node_modules/*,**/bower_components/*
 
 " NERDTree ================================================================
 "  - NERDTree customizations and mappings
