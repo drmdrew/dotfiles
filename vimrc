@@ -1,6 +1,7 @@
 " drmdrew .vimrc
 "
 " plugins installed:
+"  pathogen
 "  colorschemes
 "  command-t
 "  jshint.vim
@@ -41,6 +42,9 @@ let g:vim_json_syntax_conceal = 0
 
 " highlight search terms
 set hlsearch
+
+" searching/filtering
+set wildignore+=**/node_modules/*
 
 " NERDTree ================================================================
 "  - NERDTree customizations and mappings
