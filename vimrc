@@ -34,6 +34,7 @@ set background=dark
 
 " windows/mouse/etc.
 set mouse=a
+set clipboard=unnamed
 
 " indentation/style
 set encoding=utf-8
@@ -44,7 +45,7 @@ let g:vim_json_syntax_conceal = 0
 set hlsearch
 
 " searching/filtering
-set wildignore+=**/node_modules/*,**/bower_components/*
+set wildignore+=**/node_modules/*,**/bower_components/*,*.min.js
 
 " NERDTree ================================================================
 "  - NERDTree customizations and mappings
