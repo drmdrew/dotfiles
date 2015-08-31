@@ -20,17 +20,20 @@ execute pathogen#infect()
 set backupdir=$HOME/vim.bak//
 set directory=$HOME/vim.bak//
 
-" automatically set the directory of the file being edited
-set autochdir
+" automatically set the directory of the file being edited (when not diff-ing)
+if ! &diff
+    set autochdir
+endif
 
 " show line-numbers
 set number
 
-" color scheme
+" appearance: color scheme, etc.
 syntax enable
 colorscheme solarized
 let g:solarized_termcolors=256
 set background=dark
+set guifont=Menlo\ Regular:h12
 
 " windows/mouse/etc.
 set mouse=a
@@ -47,10 +50,15 @@ set hlsearch
 " searching/filtering
 set wildignore+=**/node_modules/*,**/bower_components/*,*.min.js
 
+" diff/merge =============================================================
+autocmd FilterWritePre * if &diff | setlocal wrap< | endif
+
 " NERDTree ================================================================
 "  - NERDTree customizations and mappings
 " 1. Map <leader>r for it will highlight (find) the current file
 map <leader>r :NERDTreeFind<cr>
+map <Leader>n <plug>NERDTreeTabsToggle<CR>
+
 " 2. Open NERDTree when VIM is running a GUI
 if has('gui_running')
     autocmd VimEnter * NERDTree
