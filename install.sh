@@ -11,6 +11,3 @@ ln -v -s $DOTFILES/vimrc ~/.vimrc
 rm ~/.zshrc
 ln -v -s $DOTFILES/zshrc ~/.zshrc
 
-rm ~/.aliases-docker
-ln -v -s $DOTFILES/aliases-docker ~/.aliases-docker
-
