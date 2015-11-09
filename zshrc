@@ -69,6 +69,9 @@ fi
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
 
+# golang
+export GOPATH=~/go
+
 # ssh
 # export SSH_KEY_PATH="~/.ssh/dsa_id"
 
@@ -81,9 +84,12 @@ fi
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
+. ~/.aliases-docker
+
 alias mvim='mvim --remote'
 alias vi='vim'
 
 alias glog10='git --no-pager log --oneline --decorate --color -10'
+alias glog100='git --no-pager log --oneline --decorate --color -100'
 
 export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting

@@ -20,6 +20,9 @@ execute pathogen#infect()
 set backupdir=$HOME/vim.bak//
 set directory=$HOME/vim.bak//
 
+" filetypes
+filetype plugin indent on
+
 " automatically set the directory of the file being edited (when not diff-ing)
 if ! &diff
     set autochdir
