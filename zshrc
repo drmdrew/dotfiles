@@ -71,6 +71,7 @@ fi
 
 # golang
 export GOPATH=~/go
+export PATH=$PATH:$GOPATH/bin
 
 # ssh
 # export SSH_KEY_PATH="~/.ssh/dsa_id"
@@ -91,5 +92,9 @@ alias vi='vim'
 
 alias glog10='git --no-pager log --oneline --decorate --color -10'
 alias glog100='git --no-pager log --oneline --decorate --color -100'
+
+# Node/nvm
+export NVM_DIR=~/.nvm
+source $(brew --prefix nvm)/nvm.sh
 
 export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
