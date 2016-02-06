@@ -1,0 +1,90 @@
+" drmdrew .vimrc
+"
+" plugins installed:
+"  pathogen
+"  colorschemes
+"  command-t
+"  jshint.vim
+"  nerdtree
+"  nerdtree-git-plugin
+"  vim-airline
+"  vim-fugitive
+"  vim-json
+"  vim-puppet
+"  vim-unimpaired
+
+" setup pathogen (tpope)
+execute pathogen#infect()
+
+" keep temporary files out of the way
+set backupdir=$HOME/vim.bak//
+set directory=$HOME/vim.bak//
+
+" filetypes
+filetype plugin indent on
+
+" automatically set the directory of the file being edited (when not diff-ing)
+if ! &diff
+    set autochdir
+endif
+
+" show line-numbers
+set number
+
+" appearance: color scheme, etc.
+syntax enable
+colorscheme solarized
+let g:solarized_termcolors=256
+set background=dark
+set guifont=Menlo\ Regular:h12
+
+" windows/mouse/etc.
+set mouse=a
+set clipboard=unnamed
+
+" indentation/style
+set encoding=utf-8
+set tabstop=8 softtabstop=0 expandtab shiftwidth=4 smarttab
+let g:vim_json_syntax_conceal = 0
+
+" highlight search terms
+set hlsearch
+
+" searching/filtering
+set wildignore+=**/node_modules/*,**/bower_components/*,*.min.js
+
+" diff/merge =============================================================
+autocmd FilterWritePre * if &diff | setlocal wrap< | endif
+
+" NERDTree ================================================================
+"  - NERDTree customizations and mappings
+" 1. Map <leader>r for it will highlight (find) the current file
+map <leader>r :NERDTreeFind<cr>
+map <Leader>n <plug>NERDTreeTabsToggle<CR>
+
+" 2. Open NERDTree when VIM is running a GUI
+if has('gui_running')
+    autocmd VimEnter * NERDTree
+endif
+" 3. Make sure the cursor doesn't start in NERDTree
+autocmd VimEnter * wincmd p
+" 4a. Define a function to check if NERDTree is open or active
+function! s:isNERDTreeOpen()
+  return exists("t:NERDTreeBufName") && (bufwinnr(t:NERDTreeBufName) != -1)
+endfunction
+" 4b. syncTree will call NERDTreeFind automatically (when NERDTree is running)
+function! s:syncTree()
+  if &modifiable && s:isNERDTreeOpen() && strlen(expand('%')) > 0 && !&diff
+    NERDTreeFind
+    wincmd p
+  endif
+endfunction
+autocmd BufRead * call s:syncTree()
+
+" GIT
+autocmd BufReadPost fugitive://* set bufhidden=delete
+
+" needed for vim-airline
+let g:airline_theme             = 'powerlineish'
+let g:airline#extensions#branch#enabled = 1
+set laststatus=2
