@@ -5,8 +5,8 @@
 #
 DOTFILES=$(cd "$(dirname ${BASH_SOURCE[0]})" && pwd)
 
-rm ~/.vimrc.local
-ln -v -s $DOTFILES/vimrc.local ~/.vimrc.local
+rm ~/.vimrc
+ln -v -s $DOTFILES/vimrc ~/.vimrc
 
 rm ~/.zshrc
 ln -v -s $DOTFILES/zshrc ~/.zshrc

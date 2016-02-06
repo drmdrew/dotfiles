@@ -1,20 +1,31 @@
 " drmdrew .vimrc
 "
-" plugins installed:
-"  pathogen
-"  colorschemes
-"  command-t
-"  jshint.vim
-"  nerdtree
-"  nerdtree-git-plugin
-"  vim-airline
-"  vim-fugitive
-"  vim-json
-"  vim-puppet
-"  vim-unimpaired
+" Configure vim to drmdrew's liking. I find spf13-vim has a few too many
+" plugins for my tastes.
 
-" setup pathogen (tpope)
-execute pathogen#infect()
+" Pre-requisites (for vundle and others)
+set nocompatible              " be iMproved, required
+filetype off                  " required
+
+" vundle =====
+" Remember: to bootstrap bundle:
+"   git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+"
+" set the runtime path to include Vundle and initialize
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+Plugin 'VundleVim/Vundle.vim'
+Plugin 'flazz/vim-colorschemes'
+Plugin 'scrooloose/nerdtree'
+Plugin 'scrooloose/syntastic'
+Plugin 'Xuyuanp/nerdtree-git-plugin'
+Plugin 'vim-airline/vim-airline'
+Plugin 'vim-airline/vim-airline-themes'
+Plugin 'tpope/vim-fugitive'
+Plugin 'git://git.wincent.com/command-t.git'
+Plugin 'wookiehangover/jshint.vim'
+call vundle#end()            " required
+filetype plugin indent on    " required
 
 " keep temporary files out of the way
 set backupdir=$HOME/vim.bak//
@@ -23,7 +34,7 @@ set directory=$HOME/vim.bak//
 " filetypes
 filetype plugin indent on
 
-" automatically set the directory of the file being edited (when not diff-ing)
+" automatically chdir to the directory of the file being edited (when not diff-ing)
 if ! &diff
     set autochdir
 endif
@@ -51,17 +62,25 @@ let g:vim_json_syntax_conceal = 0
 set hlsearch
 
 " searching/filtering
-set wildignore+=**/node_modules/*,**/bower_components/*,*.min.js
+set wildignore+=node_modules/*,**/node_modules/*,**/bower_components/*,*.min.js
 
-" diff/merge =============================================================
+" diff/merge ====
 autocmd FilterWritePre * if &diff | setlocal wrap< | endif
 
-" NERDTree ================================================================
+" syntastic ====
+set statusline+=%#warningmsg#
+set statusline+=%{SyntasticStatuslineFlag()}
+set statusline+=%*
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_auto_loc_list = 1
+let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_wq = 0
+
+" NERDTree ====
 "  - NERDTree customizations and mappings
 " 1. Map <leader>r for it will highlight (find) the current file
 map <leader>r :NERDTreeFind<cr>
-map <Leader>n <plug>NERDTreeTabsToggle<CR>
-
+map <leader>e :NERDTreeToggle<cr>
 " 2. Open NERDTree when VIM is running a GUI
 if has('gui_running')
     autocmd VimEnter * NERDTree
