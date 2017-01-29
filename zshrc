@@ -72,7 +72,7 @@ fi
 # golang
 export GOPATH=~/go
 export PATH=$PATH:$GOPATH/bin
-
+launchctl setenv GOPATH $GOPATH
 # ssh
 # export SSH_KEY_PATH="~/.ssh/dsa_id"
 
@@ -97,4 +97,10 @@ alias glog100='git --no-pager log --oneline --decorate --color -100'
 export NVM_DIR=~/.nvm
 source $(brew --prefix nvm)/nvm.sh
 
+# Swift
+export PATH=/Library/Developer/Toolchains/swift-latest.xctoolchain/usr/bin:"${PATH}"
+
 export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
+export PATH="$PATH:$HOME/bin" # Add personal bin directory
+
+
