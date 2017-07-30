@@ -33,8 +33,8 @@ call vundle#end()            " required
 filetype plugin indent on    " required
 
 " keep temporary files out of the way
-set backupdir=$HOME/vim.bak//
-set directory=$HOME/vim.bak//
+set backupdir=$HOME/.vim.backup//
+set directory=$HOME/.vim.backup//
 
 " filetypes
 filetype plugin indent on
@@ -72,7 +72,7 @@ nnoremap <C-P> :bprev<CR>
 
 " indentation/style
 set encoding=utf-8
-set tabstop=8 softtabstop=0 expandtab shiftwidth=4 smarttab
+set tabstop=4 softtabstop=0 expandtab shiftwidth=4 smarttab
 let g:vim_json_syntax_conceal = 0
 
 " filetype specific styles
@@ -128,3 +128,16 @@ autocmd BufReadPost fugitive://* set bufhidden=delete
 let g:airline_theme             = 'powerlineish'
 let g:airline#extensions#branch#enabled = 1
 set laststatus=2
+
+" golang
+let g:go_highlight_functions = 1
+let g:go_highlight_methods = 1
+let g:go_highlight_structs = 1
+let g:go_highlight_interfaces = 1
+let g:go_highlight_operators = 1
+let g:go_highlight_build_constraints = 1
+
+" angularjs
+let g:syntastic_html_tidy_ignore_errors = ['proprietary attribute']
+""ng-"', 'proprietary attribute "xmlns:ns"']
+", 'proprietary attrbute "xmls-ns"']
