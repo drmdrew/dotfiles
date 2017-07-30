@@ -7,7 +7,8 @@ export ZSH=~/.oh-my-zsh
 # time that oh-my-zsh is loaded.
 #ZSH_THEME="robbyrussell"
 #ZSH_THEME="darkblood"
-ZSH_THEME="fox"
+#ZSH_THEME="fox"
+ZSH_THEME="wintermute"
 
 # Uncomment the following line to use case-sensitive completion.
 # CASE_SENSITIVE="true"
@@ -66,6 +67,11 @@ else
   export EDITOR='vim'
 fi
 
+# Key bindings
+# Skip forward/back a word with opt-arrow
+bindkey '[C' forward-word
+bindkey '[D' backward-word
+
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
 
@@ -73,6 +79,7 @@ fi
 export GOPATH=~/go
 export PATH=$PATH:$GOPATH/bin
 launchctl setenv GOPATH $GOPATH
+
 # ssh
 # export SSH_KEY_PATH="~/.ssh/dsa_id"
 
