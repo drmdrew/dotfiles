@@ -22,8 +22,11 @@ Plugin 'Xuyuanp/nerdtree-git-plugin'
 Plugin 'vim-airline/vim-airline'
 Plugin 'vim-airline/vim-airline-themes'
 Plugin 'tpope/vim-fugitive'
+Plugin 'tpope/vim-unimpaired'
+Plugin 'ctrlp.vim'
 Plugin 'git://git.wincent.com/command-t.git'
 Plugin 'fatih/vim-go'
+Plugin 'nsf/gocode', {'rtp': 'vim/'}
 call vundle#end()            " required
 filetype plugin indent on    " required
 
@@ -41,11 +44,12 @@ endif
 
 " show line-numbers
 set number
+set listchars=tab:→\ ,trail:·
 
 " appearance: color scheme, etc.
 syntax enable
-colorscheme solarized
-let g:solarized_termcolors=256
+colorscheme zenburn
+"let g:solarized_termcolors=256
 set background=dark
 set guifont=Menlo\ Regular:h12
 
@@ -109,13 +113,21 @@ let g:airline_theme             = 'powerlineish'
 let g:airline#extensions#branch#enabled = 1
 set laststatus=2
 
-" golang
+" golang preferences
 let g:go_highlight_functions = 1
 let g:go_highlight_methods = 1
 let g:go_highlight_structs = 1
 let g:go_highlight_interfaces = 1
 let g:go_highlight_operators = 1
 let g:go_highlight_build_constraints = 1
+
+set autowrite
+autocmd FileType go nmap <leader>b  <Plug>(go-build)
+autocmd FileType go nmap <leader>r  <Plug>(go-run)
+autocmd FileType go nmap <leader>t  <Plug>(go-test)
+autocmd FileType go nmap <Leader>c <Plug>(go-coverage-toggle)
+
+let g:go_list_type = "quickfix"
 
 " angularjs
 let g:syntastic_html_tidy_ignore_errors = ['proprietary attribute']
