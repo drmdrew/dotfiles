@@ -19,14 +19,19 @@ Plugin 'flazz/vim-colorschemes'
 Plugin 'scrooloose/nerdtree'
 Plugin 'scrooloose/syntastic'
 Plugin 'Xuyuanp/nerdtree-git-plugin'
+Plugin 'ap/vim-buftabline'
 Plugin 'vim-airline/vim-airline'
 Plugin 'vim-airline/vim-airline-themes'
 Plugin 'tpope/vim-fugitive'
+Plugin 'tpope/vim-sleuth'
 Plugin 'tpope/vim-unimpaired'
-Plugin 'ctrlp.vim'
 Plugin 'git://git.wincent.com/command-t.git'
 Plugin 'fatih/vim-go'
 Plugin 'nsf/gocode', {'rtp': 'vim/'}
+Plugin 'Shougo/neocomplete'
+Plugin 'ntpeters/vim-better-whitespace'
+Plugin 'ctrlp.vim'
+
 call vundle#end()            " required
 filetype plugin indent on    " required
 
@@ -53,14 +58,29 @@ colorscheme zenburn
 set background=dark
 set guifont=Menlo\ Regular:h12
 
+" visualize (list) whitespace
+nmap <leader>l :set list!<CR>
+set listchars=eol:⏎,tab:▸\ ,trail:·,nbsp:⎵
+highlight NonText guifg=#4a4a59
+highlight SpecialKey guifg=#4a4a59
+highlight ExtraWhitespace ctermbg=red
+
 " windows/mouse/etc.
 set mouse=a
 set clipboard=unnamed
+let g:buftabline_numbers=1
+
+" navigation / keyboard mappings
+nnoremap <C-N> :bnext<CR>
+nnoremap <C-P> :bprev<CR>
 
 " indentation/style
 set encoding=utf-8
 set tabstop=4 softtabstop=0 expandtab shiftwidth=4 smarttab
 let g:vim_json_syntax_conceal = 0
+
+" filetype specific styles
+autocmd Filetype sh setlocal ts=2 sts=2 sw=2
 
 " highlight search terms
 set hlsearch
@@ -79,7 +99,7 @@ let g:syntastic_always_populate_loc_list = 1
 let g:syntastic_auto_loc_list = 1
 let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
-let g:syntastic_javascript_checkers = ['standard']
+let g:syntastic_javascript_checkers=['eslint']
 
 " NERDTree ====
 "  - NERDTree customizations and mappings
