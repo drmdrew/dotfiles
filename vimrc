@@ -36,8 +36,8 @@ call vundle#end()            " required
 filetype plugin indent on    " required
 
 " keep temporary files out of the way
-set backupdir=$HOME/.vim.backup//
-set directory=$HOME/.vim.backup//
+set backupdir=$HOME/.vim.backup/
+set directory=$HOME/.vim.backup/
 
 " filetypes
 filetype plugin indent on
