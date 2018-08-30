@@ -49,7 +49,6 @@ endif
 
 " show line-numbers
 set number
-set listchars=tab:→\ ,trail:·
 
 " appearance: color scheme, etc.
 syntax enable
@@ -63,7 +62,8 @@ nmap <leader>l :set list!<CR>
 set listchars=eol:⏎,tab:▸\ ,trail:·,nbsp:⎵
 highlight NonText guifg=#4a4a59
 highlight SpecialKey guifg=#4a4a59
-highlight ExtraWhitespace ctermbg=red
+highlight ExtraWhitespace ctermbg=red guibg=red
+match ExtraWhitespace /\s\+$/
 
 " windows/mouse/etc.
 set mouse=a
