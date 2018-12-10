@@ -92,7 +92,11 @@ launchctl setenv GOPATH $GOPATH
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-. ~/.aliases-docker
+# Load all custom zshrc configurations from custom/zshrc
+for zshrc_file ($ZSH_CUSTOM/zshrc/*.zsh(N)); do
+  source $zshrc_file
+done
+unset zshrc_file
 
 alias mvim='mvim --remote'
 alias vi='vim'
