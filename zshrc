@@ -26,6 +26,7 @@ export ZSH=~/.oh-my-zsh
 # Path to oh-my-zsh install/customizations if present
 if [ ! -f ~/.vim/bundle ]; then
   cp -r ~/dotfiles/vim ~/.vim
+  mkdir -p ~/.vim-backup
 fi
 
 # Set name of the theme to load.
