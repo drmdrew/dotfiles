@@ -81,7 +81,6 @@ bindkey '[D' backward-word
 # golang
 export GOPATH=~/go
 export PATH=$PATH:$GOPATH/bin
-launchctl setenv GOPATH $GOPATH
 
 alias mvim='mvim --remote'
 alias vi='vim'
@@ -97,6 +96,8 @@ case "$OSTYPE" in
     source $(brew --prefix nvm)/nvm.sh
     # Swift
     export PATH=/Library/Developer/Toolchains/swift-latest.xctoolchain/usr/bin:"${PATH}"
+    # Go
+    launchctl setenv GOPATH $GOPATH
 
     export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
   ;;
