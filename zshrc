@@ -114,3 +114,6 @@ alias vi='vim'
 alias glog10='git --no-pager log --oneline --decorate --color -10'
 alias glog100='git --no-pager log --oneline --decorate --color -100'
 
+if [ -e /Users/drewmacinnis/.nix-profile/etc/profile.d/nix.sh ]; then . /Users/drewmacinnis/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
+
+[ -f /opt/dev/dev.sh ] && source /opt/dev/dev.sh
