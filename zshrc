@@ -1,4 +1,7 @@
 # for ZSH
+
+[ -f /etc/zsh/zshrc.default.inc.zsh ] && source /etc/zsh/zshrc.default.inc.zsh
+
 case "$OSTYPE" in
   darwin*)
     # Node/nvm
