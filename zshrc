@@ -7,6 +7,8 @@ case "$OSTYPE" in
     # Node/nvm
     export NVM_DIR=~/.nvm
     source $(brew --prefix nvm)/nvm.sh
+    # PATH setup for macOS
+    export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${HOME}/bin:${PATH}"
     # Swift
     export PATH=/Library/Developer/Toolchains/swift-latest.xctoolchain/usr/bin:"${PATH}"
     # Go
@@ -90,7 +92,6 @@ for zshrc_file ($ZSH_CUSTOM/zshrc/*.zsh(N)); do
 done
 unset zshrc_file
 
-export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$HOME/bin"
 
 # Preferred editor for local and remote sessions
 if [[ -n $SSH_CONNECTION ]]; then
