@@ -14,7 +14,7 @@ case "$OSTYPE" in
     export NVM_DIR=~/.nvm
     source $(brew --prefix nvm)/nvm.sh
     # PATH setup for macOS
-    export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${HOME}/bin:${PATH}"
+    export PATH="./bin:${HOME}/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH}"
     # Swift
     export PATH=/Library/Developer/Toolchains/swift-latest.xctoolchain/usr/bin:"${PATH}"
     # Go
@@ -23,7 +23,8 @@ case "$OSTYPE" in
     export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
   ;;
   linux*)
-    # ...
+    # PATH setup for linux
+    export PATH="./bin:${HOME}/bin:${PATH}"
   ;;
 esac
 
