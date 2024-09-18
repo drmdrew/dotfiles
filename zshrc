@@ -14,7 +14,7 @@ case "$OSTYPE" in
     export NVM_DIR=~/.nvm
     source $(brew --prefix nvm)/nvm.sh
     # PATH setup for macOS
-    export PATH="./bin:${HOME}/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH}"
+    export PATH="./bin:${HOME}/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH}"
     # Swift
     export PATH=/Library/Developer/Toolchains/swift-latest.xctoolchain/usr/bin:"${PATH}"
     # Go
@@ -129,6 +129,6 @@ if [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then . ~/.nix-profile/etc/profile
 
 [ -f /opt/dev/dev.sh ] && source /opt/dev/dev.sh
 
-[[ -f /opt/dev/sh/chruby/chruby.sh ]] && type chruby >/dev/null 2>&1 || chruby () { source /opt/dev/sh/chruby/chruby.sh; chruby "$@"; }
+[[ -f /opt/dev/sh/chruby/chruby.sh ]] && { type chruby >/dev/null 2>&1 || chruby () { source /opt/dev/sh/chruby/chruby.sh; chruby "$@"; } }
 if [ -e /Users/drewmacinnis/.nix-profile/etc/profile.d/nix.sh ]; then . /Users/drewmacinnis/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
 
