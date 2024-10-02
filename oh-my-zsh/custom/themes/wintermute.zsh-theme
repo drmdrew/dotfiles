@@ -3,7 +3,7 @@
 # BRANCH symbol looks nice for git prompt (using font: Hack Regular Nerd Font Complete 12pt)
 BRANCH="\ue0a0"
 
-PROMPT='%{$bg[white]%}%{$fg[black]%}%{$fg_bold[black]%}%m❯%{$reset_color%}%{$fg[cyan]%}(%{$fg_bold[white]%}%~%{$reset_color%}%{$fg[cyan]%})$(git_prompt_info)
+PROMPT='%{$bg[white]%}%{$fg[black]%}%{$fg_bold[black]%}${HOSTNAME}❯%{$reset_color%}%{$fg[cyan]%}(%{$fg_bold[white]%}%~%{$reset_color%}%{$fg[cyan]%})$(git_prompt_info)
 ❯ % %{$reset_color%}'
 
 ZSH_THEME_GIT_PROMPT_PREFIX=" %{$reset_color%}%{$fg[white]%}${BRANCH} %{$fg_bold[white]%}"

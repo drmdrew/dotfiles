@@ -2,6 +2,8 @@
 
 [ -f /etc/zsh/zshrc.default.inc.zsh ] && source /etc/zsh/zshrc.default.inc.zsh
 
+export HOSTNAME=${HOST%%.*}
+
 case "$OSTYPE" in
   darwin*)
     # homebrew/brew init
@@ -132,3 +134,6 @@ if [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then . ~/.nix-profile/etc/profile
 [[ -f /opt/dev/sh/chruby/chruby.sh ]] && { type chruby >/dev/null 2>&1 || chruby () { source /opt/dev/sh/chruby/chruby.sh; chruby "$@"; } }
 if [ -e /Users/drewmacinnis/.nix-profile/etc/profile.d/nix.sh ]; then . /Users/drewmacinnis/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
 
+
+# Created by `pipx` on 2024-09-23 20:39:03
+export PATH="$PATH:/Users/drew/.local/bin"
