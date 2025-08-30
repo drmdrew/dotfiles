@@ -13,18 +13,18 @@ typeset -g _WINTERMUTE_TOOLS_CHECKED=false
 
 # Check for required tools and show warning on first login
 function check_required_tools() {
+  # Always cache tool availability regardless of warning status
+  if ! $_WINTERMUTE_TOOLS_CHECKED; then
+    command -v kubectl >/dev/null 2>&1 && _WINTERMUTE_HAS_KUBECTL=true
+    command -v git >/dev/null 2>&1 && _WINTERMUTE_HAS_GIT=true
+    _WINTERMUTE_TOOLS_CHECKED=true
+  fi
+
   local warning_file="$HOME/.wintermute_tools_warning_shown"
 
   # Only show warning once per session
   if [[ -f "$warning_file" ]]; then
     return
-  fi
-
-  # Cache tool availability
-  if ! $_WINTERMUTE_TOOLS_CHECKED; then
-    command -v kubectl >/dev/null 2>&1 && _WINTERMUTE_HAS_KUBECTL=true
-    command -v git >/dev/null 2>&1 && _WINTERMUTE_HAS_GIT=true
-    _WINTERMUTE_TOOLS_CHECKED=true
   fi
 
   local missing_tools=()
