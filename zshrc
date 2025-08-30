@@ -2,6 +2,8 @@
 
 [ -f /etc/zsh/zshrc.default.inc.zsh ] && source /etc/zsh/zshrc.default.inc.zsh
 
+export HOSTNAME=${HOST%%.*}
+
 case "$OSTYPE" in
   darwin*)
     # homebrew/brew init
@@ -14,7 +16,7 @@ case "$OSTYPE" in
     export NVM_DIR=~/.nvm
     source $(brew --prefix nvm)/nvm.sh
     # PATH setup for macOS
-    export PATH="./bin:${HOME}/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH}"
+    export PATH="./bin:${HOME}/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH}"
     # Swift
     export PATH=/Library/Developer/Toolchains/swift-latest.xctoolchain/usr/bin:"${PATH}"
     # Go
@@ -146,3 +148,6 @@ if [ -f '/Users/drew/Downloads/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/
 
 # The next line enables shell command completion for gcloud.
 if [ -f '/Users/drew/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/drew/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
+
+# Created by `pipx` on 2024-09-23 20:39:03
+export PATH="$PATH:/Users/drew/.local/bin"
