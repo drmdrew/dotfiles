@@ -129,6 +129,20 @@ if [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then . ~/.nix-profile/etc/profile
 
 [ -f /opt/dev/dev.sh ] && source /opt/dev/dev.sh
 
-[[ -f /opt/dev/sh/chruby/chruby.sh ]] && type chruby >/dev/null 2>&1 || chruby () { source /opt/dev/sh/chruby/chruby.sh; chruby "$@"; }
+if [ -e /opt/dev/sh/chruby ]; then
+  [[ -f /opt/dev/sh/chruby/chruby.sh ]] && type chruby >/dev/null 2>&1 || chruby () { source /opt/dev/sh/chruby/chruby.sh; chruby "$@"; }
+else
+  if [ -e /opt/homebrew/opt/chruby/share/chruby/chruby.sh ]; then
+    source /opt/homebrew/opt/chruby/share/chruby/chruby.sh;
+    chruby 3.1.2
+  fi
+fi
+
 if [ -e /Users/drewmacinnis/.nix-profile/etc/profile.d/nix.sh ]; then . /Users/drewmacinnis/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
 
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/drew/Downloads/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/drew/Downloads/google-cloud-sdk/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/Users/drew/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/drew/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
