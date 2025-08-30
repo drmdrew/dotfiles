@@ -6,6 +6,11 @@ KUBERNETES="☸"            # Traditional Kubernetes symbol
 TRIANGLE_LEFT="\ue0b2"    # Solid left-pointing triangle
 TRIANGLE_RIGHT="\ue0b0"   # Solid right-pointing triangle
 
+# Cache tool availability to avoid repeated command -v calls
+typeset -g _WINTERMUTE_HAS_KUBECTL=false
+typeset -g _WINTERMUTE_HAS_GIT=false
+typeset -g _WINTERMUTE_TOOLS_CHECKED=false
+
 # Check for required tools and show warning on first login
 function check_required_tools() {
   local warning_file="$HOME/.wintermute_tools_warning_shown"
@@ -13,6 +18,13 @@ function check_required_tools() {
   # Only show warning once per session
   if [[ -f "$warning_file" ]]; then
     return
+  fi
+
+  # Cache tool availability
+  if ! $_WINTERMUTE_TOOLS_CHECKED; then
+    command -v kubectl >/dev/null 2>&1 && _WINTERMUTE_HAS_KUBECTL=true
+    command -v git >/dev/null 2>&1 && _WINTERMUTE_HAS_GIT=true
+    _WINTERMUTE_TOOLS_CHECKED=true
   fi
 
   local missing_tools=()
@@ -37,10 +49,12 @@ function check_required_tools() {
   touch "$warning_file"
 }
 
-# Function to get current timestamp
+# Function to get current timestamp (optimized to use single date call)
 function get_timestamp() {
-  local local_time=$(date '+%H:%M %Z')
-  local utc_time=$(date -u '+%H%MZ')
+  # Use a single date call and parse the output
+  local date_output=$(date '+%H:%M %Z %H%MZ')
+  local local_time="${date_output% * *}"  # Extract HH:MM TZ
+  local utc_time="${date_output##* }"     # Extract HHMMZ
   echo "%{$fg[white]%}${local_time}%{$reset_color%}/%{$fg[gray]%}${utc_time}%{$reset_color%}"
 }
 
@@ -59,39 +73,29 @@ function get_exit_status() {
   fi
 }
 
-# Function to get Kubernetes context and namespace
+# Function to get Kubernetes context
 function kube_prompt_info() {
-  if command -v kubectl >/dev/null 2>&1; then
-    local context=$(kubectl config current-context 2>/dev/null)
-    local namespace=$(kubectl config view --minify --output 'jsonpath={..namespace}' 2>/dev/null)
+  # Use cached kubectl availability
+  if ! $_WINTERMUTE_HAS_KUBECTL; then
+    return
+  fi
 
-    if [[ -n "$context" ]]; then
-      local kube_info=""
-      if [[ -n "$namespace" && "$namespace" != "default" ]]; then
-        kube_info="${context}:${namespace}"
-      else
-        kube_info="${context}"
-      fi
+  # Get kubectl context
+  local context=$(kubectl config current-context 2>/dev/null)
 
-      # Truncate if longer than 20 characters
-      if [[ ${#kube_info} -gt 20 ]]; then
-        kube_info="${kube_info:0:17}..."
-      fi
+  if [[ -n "$context" ]]; then
+    local kube_info="$context"
 
-      echo "%{$fg[blue]%}${TRIANGLE_LEFT}%{$bg[blue]%}%{$fg[white]%} ${KUBERNETES} ${kube_info} %{$reset_color%}%{$fg[blue]%}${TRIANGLE_RIGHT}"
+    # Truncate if longer than 20 characters
+    if [[ ${#kube_info} -gt 20 ]]; then
+      kube_info="${kube_info:0:17}..."
     fi
+
+    echo "%{$fg[blue]%}${TRIANGLE_LEFT}%{$bg[blue]%}%{$fg[white]%} ${KUBERNETES} ${kube_info} %{$reset_color%}%{$fg[blue]%}${TRIANGLE_RIGHT}"
   fi
 }
 
-# Function to truncate git branch name
-function truncate_git_branch() {
-  local branch="$1"
-  if [[ ${#branch} -gt 20 ]]; then
-    echo "${branch:0:17}..."
-  else
-    echo "$branch"
-  fi
-}
+
 
 # Build prompt sections for better readability
 HOSTNAME_SECTION='%{$fg[black]%}#%{$reset_color%}%{$bg[white]%}%{$fg[black]%}%{$fg_bold[black]%}%m❯%{$reset_color%}'
