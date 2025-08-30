@@ -9,12 +9,14 @@ case "$OSTYPE" in
     # homebrew/brew init
     [[ -x /usr/local/bin/brew ]] && eval $(/usr/local/bin/brew shellenv)
     [[ -x /opt/homebrew/bin/brew ]] && eval $(/opt/homebrew/bin/brew shellenv)
+
+    # JAVA
+    export JAVA_HOME=/Library/Java/JavaVirtualMachines/openjdk-21.jdk/Contents/Home/
+
     # fonts: https://github.com/ryanoasis/nerd-fonts#option-4-homebrew-fonts
     # brew tap homebrew/cask-fonts
     # brew install --cask font-hack-nerd-font
-    # Node/nvm
-    export NVM_DIR=~/.nvm
-    source $(brew --prefix nvm)/nvm.sh
+
     # PATH setup for macOS
     export PATH="./bin:${HOME}/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH}"
     # Swift
@@ -43,7 +45,7 @@ if [ ! -f ~/.vim/bundle ]; then
   mkdir -p ~/.vim.backup
 fi
 
-# Set name of the theme to load.
+# Set name of the oh-my-zsh theme to load.
 # Look in ~/.oh-my-zsh/themes/
 # Optionally, if you set this to "random", it'll load a random theme each
 # time that oh-my-zsh is loaded.
@@ -101,7 +103,6 @@ for zshrc_file ($ZSH_CUSTOM/zshrc/*.zsh(N)); do
 done
 unset zshrc_file
 
-
 # Preferred editor for local and remote sessions
 if [[ -n $SSH_CONNECTION ]]; then
   export EDITOR='vim'
@@ -124,30 +125,38 @@ export PATH=$PATH:$GOPATH/bin
 alias mvim='mvim --remote'
 alias vi='vim'
 
-alias glog10='git --no-pager log --oneline --decorate --color -10'
-alias glog100='git --no-pager log --oneline --decorate --color -100'
-
+# Nix
 if [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then . ~/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
 
+# Shopify dev tool (when installed/used by projects)
 [ -f /opt/dev/dev.sh ] && source /opt/dev/dev.sh
 
+# Ruby / chruby
 if [ -e /opt/dev/sh/chruby ]; then
   [[ -f /opt/dev/sh/chruby/chruby.sh ]] && type chruby >/dev/null 2>&1 || chruby () { source /opt/dev/sh/chruby/chruby.sh; chruby "$@"; }
-else
-  if [ -e /opt/homebrew/opt/chruby/share/chruby/chruby.sh ]; then
-    source /opt/homebrew/opt/chruby/share/chruby/chruby.sh;
-    chruby 3.1.2
-  fi
+elif [ -e /opt/homebrew/opt/chruby/share/chruby/chruby.sh ]; then
+  source /opt/homebrew/opt/chruby/share/chruby/chruby.sh;
+  chruby 3.3.6 # latest
 fi
 
-if [ -e /Users/drewmacinnis/.nix-profile/etc/profile.d/nix.sh ]; then . /Users/drewmacinnis/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
+# Ruby / rbenv
+[ -f /opt/homebrew/bin/rbenv ] && eval "$(rbenv init -)"
 
+# NVM
+export NVM_DIR="$HOME/.nvm"
+[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"
+[ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && \. "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"
 
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/drew/Downloads/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/drew/Downloads/google-cloud-sdk/path.zsh.inc'; fi
-
-# The next line enables shell command completion for gcloud.
-if [ -f '/Users/drew/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/drew/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
-
-# Created by `pipx` on 2024-09-23 20:39:03
+# pipx: Created by `pipx` on 2024-09-23 20:39:03
 export PATH="$PATH:/Users/drew/.local/bin"
+
+# Google Cloud SDK: The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/drew/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/drew/google-cloud-sdk/path.zsh.inc'; fi
+
+# Google Cloud SDK: The next line enables shell command completion for gcloud.
+if [ -f '/Users/drew/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/drew/google-cloud-sdk/completion.zsh.inc'; fi
+
+# k9s
+if [ -f '/opt/homebrew/bin/k9s' ]; then
+  K9S_CONFIG_DIR=~/.config/k9s
+fi

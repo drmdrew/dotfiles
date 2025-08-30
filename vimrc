@@ -56,6 +56,7 @@ colorscheme zenburn
 "let g:solarized_termcolors=256
 set background=dark
 set guifont=Menlo\ Regular:h12
+highlight Visual ctermbg=LightBlue ctermfg=Grey
 
 " visualize (list) whitespace
 nmap <leader>l :set list!<CR>
@@ -81,6 +82,7 @@ let g:vim_json_syntax_conceal = 0
 
 " filetype specific styles
 autocmd Filetype sh setlocal ts=2 sts=2 sw=2
+autocmd FileType markdown setlocal spell
 
 " highlight search terms
 set hlsearch
