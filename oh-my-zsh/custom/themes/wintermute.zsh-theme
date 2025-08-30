@@ -94,7 +94,7 @@ function truncate_git_branch() {
 }
 
 # Build prompt sections for better readability
-HOSTNAME_SECTION='%{$bg[white]%}%{$fg[black]%}%{$fg_bold[black]%}%m❯%{$reset_color%}'
+HOSTNAME_SECTION='%{$fg[black]%}#%{$reset_color%}%{$bg[white]%}%{$fg[black]%}%{$fg_bold[black]%}%m❯%{$reset_color%}'
 DIRECTORY_SECTION='%{$fg[cyan]%}(%{$fg_bold[white]%}%~%{$reset_color%}%{$fg[cyan]%})'
 HISTORY_SECTION='$(get_history_number)'
 EXIT_STATUS_SECTION='$(get_exit_status)'
@@ -104,7 +104,7 @@ GIT_SECTION='$(git_prompt_info)'
 
 # Combine all sections into the final prompt
 PROMPT="${HOSTNAME_SECTION}${DIRECTORY_SECTION} ${HISTORY_SECTION} ${EXIT_STATUS_SECTION} ${TIMESTAMP_SECTION} ${KUBERNETES_SECTION}${GIT_SECTION}
-❯ % %{$reset_color%}"
+%{$fg[black]%}#%{$reset_color%}❯ % %{$reset_color%}"
 
 ZSH_THEME_GIT_PROMPT_PREFIX=" %{$fg[green]%}${TRIANGLE_LEFT}%{$bg[green]%}%{$fg[white]%} ${BRANCH} %{$fg_bold[white]%}"
 ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%}%{$fg[green]%}${TRIANGLE_RIGHT}"
