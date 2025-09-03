@@ -91,7 +91,7 @@ function kube_prompt_info() {
       kube_info="${kube_info:0:17}..."
     fi
 
-    echo "%{$fg[blue]%}${TRIANGLE_LEFT}%{$bg[blue]%}%{$fg[white]%} ${KUBERNETES} ${kube_info} %{$reset_color%}%{$fg[blue]%}${TRIANGLE_RIGHT}"
+    echo "%{$fg[blue]%}${TRIANGLE_LEFT}%{$bg[blue]%}%{$fg[white]%} ${KUBERNETES} ${kube_info} %{$reset_color%}%{$fg[blue]%}${TRIANGLE_RIGHT}%{$reset_color%}"
   fi
 }
 
