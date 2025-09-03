@@ -107,11 +107,11 @@ KUBERNETES_SECTION='$(kube_prompt_info)'
 GIT_SECTION='$(git_prompt_info)'
 
 # Combine all sections into the final prompt
-PROMPT="${HOSTNAME_SECTION}${DIRECTORY_SECTION} ${HISTORY_SECTION} ${EXIT_STATUS_SECTION} ${TIMESTAMP_SECTION}
-%{$fg[black]%}#%${GIT_SECTION}${KUBERNETES_SECTION}
+PROMPT="${HOSTNAME_SECTION}${DIRECTORY_SECTION} ${HISTORY_SECTION} ${EXIT_STATUS_SECTION} ${TIMESTAMP_SECTION} ${GIT_SECTION}${KUBERNETES_SECTION}
 %{$fg[black]%}#%{$reset_color%}❯ % %{$reset_color%}"
 
-ZSH_THEME_GIT_PROMPT_PREFIX=" %{$fg[green]%}${TRIANGLE_LEFT}%{$bg[green]%}%{$fg[white]%} ${BRANCH} %{$fg_bold[white]%}"
+ZSH_THEME_GIT_PROMPT_PREFIX="
+%{$fg[black]%}# %{$fg[green]%}${TRIANGLE_LEFT}%{$bg[green]%}%{$fg[white]%} ${BRANCH} %{$fg_bold[white]%}"
 ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%}%{$fg[green]%}${TRIANGLE_RIGHT}%{$reset_color%}"
 ZSH_THEME_GIT_PROMPT_DIRTY=" %{$fg[red]%}✗%{$reset_color%}"
 ZSH_THEME_GIT_PROMPT_CLEAN=" %{$fg[green]%}✔%{$reset_color%}"
