@@ -7,6 +7,12 @@
 set nocompatible              " be iMproved, required
 filetype off                  " required
 
+" vim/neovim compatability
+if has('nvim')
+    set runtimepath^=~/.vim runtimepath+=~/.vim/after
+    let &packpath = &runtimepath
+endif
+
 " vundle =====
 " Remember: to bootstrap bundle:
 "   git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim

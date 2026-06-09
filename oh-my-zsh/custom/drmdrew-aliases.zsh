@@ -21,6 +21,9 @@ alias gundo='gco origin/$(git_main_or_master) --'
 # aliases for vscode
 alias cdiff='code --new-window --diff'
 
+# aliases for cursor
+alias cursor-ui='open -a Cursor'
+
 # aliases for searching (ripgrep)
 alias rgh='rg --no-heading -H'
 

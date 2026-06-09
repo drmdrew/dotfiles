@@ -18,7 +18,7 @@ case "$OSTYPE" in
     # brew install --cask font-hack-nerd-font
 
     # PATH setup for macOS
-    export PATH="./bin:${HOME}/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH}"
+    export PATH="${HOME}/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH}"
     # Swift
     export PATH=/Library/Developer/Toolchains/swift-latest.xctoolchain/usr/bin:"${PATH}"
     # Go
@@ -28,7 +28,7 @@ case "$OSTYPE" in
   ;;
   linux*)
     # PATH setup for linux
-    export PATH="./bin:${HOME}/bin:${PATH}"
+    export PATH="${HOME}/bin:${PATH}"
   ;;
 esac
 
@@ -141,6 +141,11 @@ fi
 
 # Ruby / rbenv
 [ -f /opt/homebrew/bin/rbenv ] && eval "$(rbenv init -)"
+
+# Python
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init - zsh)"
 
 # NVM
 export NVM_DIR="$HOME/.nvm"

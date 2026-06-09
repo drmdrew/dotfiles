@@ -51,16 +51,14 @@ function check_required_tools() {
 
 # Function to get current timestamp (optimized to use single date call)
 function get_timestamp() {
-  # Use a single date call and parse the output
-  local date_output=$(date '+%H:%M %Z %H%MZ')
-  local local_time="${date_output% * *}"  # Extract HH:MM TZ
-  local utc_time="${date_output##* }"     # Extract HHMMZ
-  echo "%{$fg[white]%}${local_time}%{$reset_color%}/%{$fg[gray]%}${utc_time}%{$reset_color%}"
+  local local_time=$(date '+%H:%M %Z')
+  local utc_time=$(date -u '+%H%M')
+  echo "%{$fg[white]%}${local_time}%{$reset_color%}/%F{8}${utc_time}Z%{$reset_color%}"
 }
 
 # Function to show current history number
 function get_history_number() {
-  echo "%{$fg[gray]%}#${HISTCMD}%{$reset_color%}"
+  echo "%F{8}#${HISTCMD}%{$reset_color%}"
 }
 
 # Function to show last command exit status
@@ -91,7 +89,7 @@ function kube_prompt_info() {
       kube_info="${kube_info:0:17}..."
     fi
 
-    echo "%{$fg[blue]%}${TRIANGLE_LEFT}%{$bg[blue]%}%{$fg[white]%} ${KUBERNETES} ${kube_info} %{$reset_color%}%{$fg[blue]%}${TRIANGLE_RIGHT}"
+    echo "%{$fg[blue]%}${TRIANGLE_LEFT}%{$bg[blue]%}%{$fg[black]%} ${KUBERNETES} ${kube_info} %{$reset_color%}%{$fg[blue]%}${TRIANGLE_RIGHT}"
   fi
 }
 
@@ -110,10 +108,10 @@ GIT_SECTION='$(git_prompt_info)'
 PROMPT="${HOSTNAME_SECTION}${DIRECTORY_SECTION} ${HISTORY_SECTION} ${EXIT_STATUS_SECTION} ${TIMESTAMP_SECTION} ${GIT_SECTION}${KUBERNETES_SECTION}
 %{$fg[black]%}#%{$reset_color%}❯ % %{$reset_color%}"
 
-ZSH_THEME_GIT_PROMPT_PREFIX=" %{$fg[green]%}${TRIANGLE_LEFT}%{$bg[green]%}%{$fg[white]%} ${BRANCH} %{$fg_bold[white]%}"
+ZSH_THEME_GIT_PROMPT_PREFIX=" %{$fg[green]%}${TRIANGLE_LEFT}%{$bg[green]%}%{$fg[black]%} ${BRANCH} %{$fg_bold[black]%}"
 ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%}%{$fg[green]%}${TRIANGLE_RIGHT}"
 ZSH_THEME_GIT_PROMPT_DIRTY=" %{$fg[red]%}✗%{$reset_color%}"
-ZSH_THEME_GIT_PROMPT_CLEAN=" %{$fg[green]%}✔%{$reset_color%}"
+ZSH_THEME_GIT_PROMPT_CLEAN=" %{$fg[black]%}✔%{$reset_color%}"
 
 # Run tool check when theme is loaded
 check_required_tools
