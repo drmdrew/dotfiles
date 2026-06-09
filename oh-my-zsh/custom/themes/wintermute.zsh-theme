@@ -61,13 +61,17 @@ function get_history_number() {
   echo "%F{8}#${HISTCMD}%{$reset_color%}"
 }
 
+# Capture $? before precmd hooks clobber it
+typeset -g _WINTERMUTE_LAST_EXIT=0
+function _wintermute_record_exit() { _WINTERMUTE_LAST_EXIT=$? }
+precmd_functions=(_wintermute_record_exit $precmd_functions)
+
 # Function to show last command exit status
 function get_exit_status() {
-  local exit_code=$?
-  if [[ $exit_code -eq 0 ]]; then
+  if [[ $_WINTERMUTE_LAST_EXIT -eq 0 ]]; then
     echo "%{$fg[green]%}✅%{$reset_color%}"
   else
-    echo "%{$fg[red]%}💣%{$reset_color%}"
+    echo "%{$fg[red]%}💥%{$reset_color%}"
   fi
 }
 
@@ -89,7 +93,7 @@ function kube_prompt_info() {
       kube_info="${kube_info:0:17}..."
     fi
 
-    echo "%{$fg[blue]%}${TRIANGLE_LEFT}%{$bg[blue]%}%{$fg[black]%} ${KUBERNETES} ${kube_info} %{$reset_color%}%{$fg[blue]%}${TRIANGLE_RIGHT}"
+    echo "%{$fg[blue]%}${TRIANGLE_LEFT}%{$bg[blue]%}%{$fg[black]%} ${KUBERNETES} ${kube_info} %{$reset_color%}%{$fg[blue]%}${TRIANGLE_RIGHT}%{$reset_color%}"
   fi
 }
 
@@ -109,7 +113,7 @@ PROMPT="${HOSTNAME_SECTION}${DIRECTORY_SECTION} ${HISTORY_SECTION} ${EXIT_STATUS
 %{$fg[black]%}#%{$reset_color%}❯ % %{$reset_color%}"
 
 ZSH_THEME_GIT_PROMPT_PREFIX=" %{$fg[green]%}${TRIANGLE_LEFT}%{$bg[green]%}%{$fg[black]%} ${BRANCH} %{$fg_bold[black]%}"
-ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%}%{$fg[green]%}${TRIANGLE_RIGHT}"
+ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%}%{$fg[green]%}${TRIANGLE_RIGHT}%{$reset_color%}"
 ZSH_THEME_GIT_PROMPT_DIRTY=" %{$fg[red]%}✗%{$reset_color%}"
 ZSH_THEME_GIT_PROMPT_CLEAN=" %{$fg[black]%}✔%{$reset_color%}"
 
