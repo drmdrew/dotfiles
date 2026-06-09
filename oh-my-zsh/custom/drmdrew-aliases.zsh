@@ -30,6 +30,9 @@ alias kgpods='kubectl get pods'
 # aliases for vscode
 alias cdiff='code --new-window --diff'
 
+# aliases for cursor
+alias cursor-ui='open -a Cursor'
+
 # aliases for searching (ripgrep)
 alias rgh='rg --no-heading -H'
 
