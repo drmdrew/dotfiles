@@ -47,16 +47,17 @@ if ! &diff
     set autochdir
 endif
 
+" auto-reload files when changed outside vim (especially for ~/notes)
+set autoread
+" Update time for CursorHold events (2 seconds for more responsive auto-reload)
+set updatetime=2000
+" Check for file changes when vim gains focus or cursor moves
+au FocusGained,BufEnter,CursorHold,CursorHoldI * if expand('%') != '' | checktime | endif
+" Also check periodically for files in ~/notes
+au CursorHold * if getcwd() =~ '/notes' && expand('%') != '' | checktime | endif
+
 " show line-numbers
 set number
-
-" appearance: color scheme, etc.
-syntax enable
-colorscheme zenburn
-"let g:solarized_termcolors=256
-set background=dark
-set guifont=Menlo\ Regular:h12
-highlight Visual ctermbg=LightBlue ctermfg=Grey
 
 " visualize (list) whitespace
 nmap <leader>l :set list!<CR>
@@ -68,7 +69,11 @@ match ExtraWhitespace /\s\+$/
 
 " windows/mouse/etc.
 set mouse=a
-set clipboard=unnamed
+if has('mac') || has('macunix')
+  set clipboard=unnamed
+else
+  set clipboard=unnamedplus
+endif
 let g:buftabline_numbers=1
 
 " navigation / keyboard mappings
@@ -155,3 +160,13 @@ let g:go_list_type = "quickfix"
 let g:syntastic_html_tidy_ignore_errors = ['proprietary attribute']
 ""ng-"', 'proprietary attribute "xmlns:ns"']
 ", 'proprietary attrbute "xmls-ns"']
+"
+
+"" appearance: color scheme, etc.
+syntax enable
+set termguicolors
+set guifont=Menlo\ Regular:h12
+"" highlight Visual ctermbg=LightBlue ctermfg=Grey
+colorscheme zenburn
+
+

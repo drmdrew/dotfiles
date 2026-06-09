@@ -13,22 +13,28 @@ case "$OSTYPE" in
     # JAVA
     export JAVA_HOME=/Library/Java/JavaVirtualMachines/openjdk-21.jdk/Contents/Home/
 
+    # k9s and k8s settings
+    export K9S_CONFIG_DIR="$HOME/.config/k9s"
+
     # fonts: https://github.com/ryanoasis/nerd-fonts#option-4-homebrew-fonts
     # brew tap homebrew/cask-fonts
     # brew install --cask font-hack-nerd-font
 
     # PATH setup for macOS
-    export PATH="./bin:${HOME}/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH}"
+    export PATH="${HOME}/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH}"
     # Swift
     export PATH=/Library/Developer/Toolchains/swift-latest.xctoolchain/usr/bin:"${PATH}"
     # Go
     # launchctl setenv GOPATH $GOPATH
 
     export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
+
+    # for coreutils gnubin
+    export PATH=/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH
   ;;
   linux*)
     # PATH setup for linux
-    export PATH="./bin:${HOME}/bin:${PATH}"
+    export PATH="${HOME}/bin:${PATH}"
   ;;
 esac
 
@@ -115,6 +121,8 @@ fi
 bindkey '[C' forward-word
 bindkey '[D' backward-word
 
+bindkey '^X^W' backward-kill-line
+
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
 
@@ -124,6 +132,11 @@ export PATH=$PATH:$GOPATH/bin
 
 alias mvim='mvim --remote'
 alias vi='vim'
+
+# Python
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init - zsh)"
 
 # Nix
 if [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then . ~/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
@@ -160,3 +173,9 @@ if [ -f '/Users/drew/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/drew
 if [ -f '/opt/homebrew/bin/k9s' ]; then
   K9S_CONFIG_DIR=~/.config/k9s
 fi
+# The following lines have been added by Docker Desktop to enable Docker CLI completions.
+fpath=(/Users/drew/.docker/completions $fpath)
+autoload -Uz compinit
+compinit
+# End of Docker CLI completions
+eval "$(mise activate zsh)"

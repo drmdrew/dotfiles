@@ -1,5 +1,8 @@
 # wintermute derived from fox.zsh-theme
 
+# looks best with MesloLGS NF
+# brew install --cask font-meslo-for-powerlevel10k
+
 # Symbol definitions for better readability
 BRANCH="\ue0a0"           # Git branch symbol (using font: Hack Regular Nerd Font Complete 12pt)
 KUBERNETES="☸"            # Traditional Kubernetes symbol
@@ -51,25 +54,40 @@ function check_required_tools() {
 
 # Function to get current timestamp (optimized to use single date call)
 function get_timestamp() {
-  # Use a single date call and parse the output
-  local date_output=$(date '+%H:%M %Z %H%MZ')
-  local local_time="${date_output% * *}"  # Extract HH:MM TZ
-  local utc_time="${date_output##* }"     # Extract HHMMZ
-  echo "%{$fg[white]%}${local_time}%{$reset_color%}/%{$fg[gray]%}${utc_time}%{$reset_color%}"
+  # 1. Use a single date call.
+  #    - The format includes:
+  #      - Local Time: %H:%M %Z
+  #      - Separator: | (for easy parsing)
+  #      - UTC Time:  %H%MZ (using the -u flag to force UTC)
+  local date_output=$(date '+%H:%M|' | tr -d '\n'; date -u '+%H%MZ')
+
+  local local_time="${date_output%|*}"  # Everything before the '|' (e.g., 12:43 EST)
+  local utc_time="${date_output#*|}"    # Everything after the '|' (e.g., 1743Z)
+
+  # 3. Output the formatted string (assuming this is for a Zsh prompt)
+  echo "%{$fg[white]%}${local_time}%{$reset_color%}/%{$fg[yellow]%}${utc_time}%{$reset_color%}"
 }
 
 # Function to show current history number
 function get_history_number() {
-  echo "%{$fg[gray]%}#${HISTCMD}%{$reset_color%}"
+  echo "%{$fg[yellow]%}#${HISTCMD}%{$reset_color%}"
+}
+
+# Store exit status from precmd hook
+typeset -g _WINTERMUTE_EXIT_CODE=0
+
+# Save exit status before prompt evaluation
+function precmd_exit_status() {
+  _WINTERMUTE_EXIT_CODE=$?
 }
 
 # Function to show last command exit status
 function get_exit_status() {
-  local exit_code=$?
+  local exit_code=$_WINTERMUTE_EXIT_CODE
   if [[ $exit_code -eq 0 ]]; then
-    echo "%{$fg[green]%}✅%{$reset_color%}"
+    echo "%{$fg[green]%}✓%{$reset_color%}"
   else
-    echo "%{$fg[red]%}💣%{$reset_color%}"
+    echo "%{$fg[red]%}💥%{$reset_color%}"
   fi
 }
 
@@ -107,14 +125,18 @@ KUBERNETES_SECTION='$(kube_prompt_info)'
 GIT_SECTION='$(git_prompt_info)'
 
 # Combine all sections into the final prompt
-PROMPT="${HOSTNAME_SECTION}${DIRECTORY_SECTION} ${HISTORY_SECTION} ${EXIT_STATUS_SECTION} ${TIMESTAMP_SECTION} ${GIT_SECTION}${KUBERNETES_SECTION}
+PROMPT="${HOSTNAME_SECTION}${DIRECTORY_SECTION} ${HISTORY_SECTION} ${EXIT_STATUS_SECTION} ${TIMESTAMP_SECTION} ${GIT_SECTION}${KUBERNETES_SECTION}%{$reset_color%}
 %{$fg[black]%}#%{$reset_color%}❯ % %{$reset_color%}"
 
 ZSH_THEME_GIT_PROMPT_PREFIX="
-%{$fg[black]%}# %{$fg[green]%}${TRIANGLE_LEFT}%{$bg[green]%}%{$fg[white]%} ${BRANCH} %{$fg_bold[white]%}"
-ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%}%{$fg[green]%}${TRIANGLE_RIGHT}%{$reset_color%}"
+%{$fg[black]%}# %{%F{34}%}${TRIANGLE_LEFT}%{%K{34}%}%{$fg[white]%} ${BRANCH} %{$fg_bold[white]%}"
+ZSH_THEME_GIT_PROMPT_SUFFIX="%{%k%}%{%f%}%{$reset_color%}%{%F{34}%}${TRIANGLE_RIGHT}%{%f%}%{$reset_color%}"
 ZSH_THEME_GIT_PROMPT_DIRTY=" %{$fg[red]%}✗%{$reset_color%}"
 ZSH_THEME_GIT_PROMPT_CLEAN=" %{$fg[green]%}✔%{$reset_color%}"
 
+# Register precmd hook to save exit status
+precmd_functions+=(precmd_exit_status)
+
 # Run tool check when theme is loaded
 check_required_tools
+
