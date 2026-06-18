@@ -21,7 +21,7 @@ case "$OSTYPE" in
     # brew install --cask font-hack-nerd-font
 
     # PATH setup for macOS
-    export PATH="${HOME}/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH}"
+    export PATH="${HOME}/.local/bin:${HOME}/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH}"
     # Swift
     export PATH=/Library/Developer/Toolchains/swift-latest.xctoolchain/usr/bin:"${PATH}"
     # Go
@@ -34,7 +34,7 @@ case "$OSTYPE" in
   ;;
   linux*)
     # PATH setup for linux
-    export PATH="${HOME}/bin:${PATH}"
+    export PATH="${HOME}/.local/bin:${HOME}/bin:${PATH}"
   ;;
 esac
 

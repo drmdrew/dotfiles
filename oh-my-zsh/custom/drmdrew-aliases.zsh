@@ -10,7 +10,7 @@ alias gcmain='git checkout main'
 alias gcmaster='git checkout master'
 alias gtfo='git push --set-upstream origin $(git branch --show-current)'
 alias gclean='git clean -df'
-alias grbias='git pull origin $(git_main_or_master) && git rebase  --interactive --autosquash origin/$(git_main_or_master)'
+alias grbias='git fetch origin $(git_main_or_master) && git rebase  --interactive --autosquash origin/$(git_main_or_master)'
 alias gpfwl='git push --force-with-lease'
 alias greset='git reset --hard origin/$(git branch --show-current)'
 alias glogarch='git log -w -M -C -C -C'
@@ -77,4 +77,15 @@ claude-qq() {
 }
 
 alias qq='claude-qq'
+
+# pngsave - save the macOS clipboard image to a per-ISO-week PNG and print its path.
+# Usage: pngsave [base-dir]  (default: $PWD/images). Handy for feeding screenshots to claude.
+pngsave() {
+  local base="${1:-$PWD/images}"
+  local dir="${base%/}/$(date +%G-W%V)"
+  mkdir -p "$dir"
+  local path="$dir/$(date +%Y%m%d-%H%M%S).png"
+  if pngpaste "$path" 2>/dev/null; then print -r -- "$path"
+  else print -u2 "pngsave: no image on clipboard"; return 1; fi
+}
 

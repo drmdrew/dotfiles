@@ -23,7 +23,8 @@ call vundle#begin()
 Plugin 'VundleVim/Vundle.vim'
 Plugin 'flazz/vim-colorschemes'
 Plugin 'scrooloose/nerdtree'
-Plugin 'scrooloose/syntastic'
+" Plugin 'scrooloose/syntastic'
+Plugin 'dense-analysis/ale'
 Plugin 'Xuyuanp/nerdtree-git-plugin'
 Plugin 'ap/vim-buftabline'
 Plugin 'vim-airline/vim-airline'
@@ -40,6 +41,25 @@ Plugin 'ctrlp.vim'
 
 call vundle#end()            " required
 filetype plugin indent on    " required
+
+" ==========================================
+" Asynchronous Lint Engine (ALE) Settings
+" ==========================================
+let g:ale_enabled = 1
+
+" Explicitly instruct ALE to pass .toml buffers to the tombi binary.
+" This ALE version ships a 'tombi' recipe but no 'taplo' recipe, so naming
+" 'taplo' here produced an empty enabled-linter set and aborted linting.
+let g:ale_linters = {
+\   'toml': ['tombi'],
+\}
+
+" Customize the indicators displayed in the left-hand gutter column
+let g:ale_sign_error = '❌'
+let g:ale_sign_warning = '⚠️'
+
+" Optional: Automatically run lint checks immediately when text is changed
+let g:ale_lint_on_text_changed = 'normal'
 
 " keep temporary files out of the way
 set backupdir=$HOME/.vim.backup/
@@ -94,6 +114,23 @@ let g:vim_json_syntax_conceal = 0
 " filetype specific styles
 autocmd Filetype sh setlocal ts=2 sts=2 sw=2
 autocmd FileType markdown setlocal spell
+
+" markdown: paste a clipboard screenshot into a per-ISO-week images/ dir (requires pngpaste)
+function! s:PasteImage() abort
+  let l:week = strftime('%G-W%V')
+  let l:dir  = expand('%:p:h') . '/images/' . l:week
+  if !isdirectory(l:dir) | call mkdir(l:dir, 'p') | endif
+  let l:name = strftime('%Y%m%d-%H%M%S') . '.png'
+  call system('pngpaste ' . shellescape(l:dir . '/' . l:name))
+  if v:shell_error != 0
+    echohl ErrorMsg | echom 'pngpaste: no image on clipboard' | echohl None
+    return
+  endif
+  call append(line('.'), '![](images/' . l:week . '/' . l:name . ')')
+  normal! j
+endfunction
+command! PasteImage call s:PasteImage()
+autocmd FileType markdown nnoremap <buffer> <leader>p :PasteImage<CR>
 
 " highlight search terms
 set hlsearch
