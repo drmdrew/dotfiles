@@ -22,3 +22,32 @@ if [ ! -e ~/.config/nvim/vimfiles ]; then
 else
     echo "~/.config/nvim/vimfiles already exists, skipping"
 fi
+
+# --- Coding agents -----------------------------------------------------------
+#
+# agents/  : tool-agnostic AGENTS.md + Agent Skills (SKILL.md folders)
+# claude/  : Claude Code-specific files
+#
+# safe_ln SRC DEST: like `ln -sfn`, but skips (with a warning) when DEST is
+# a real directory, where ln would otherwise create the link *inside* it.
+safe_ln() {
+    if [ -d "$2" ] && [ ! -L "$2" ]; then
+        echo "$2 is a real directory, skipping (move it aside and re-run)"
+    else
+        ln -v -sfn "$1" "$2"
+    fi
+}
+
+mkdir -p ~/.agents ~/.claude/skills
+safe_ln $DOTFILES/agents/AGENTS.md ~/.agents/AGENTS.md
+safe_ln $DOTFILES/agents/skills    ~/.agents/skills
+
+safe_ln $DOTFILES/claude/CLAUDE.md     ~/.claude/CLAUDE.md
+safe_ln $DOTFILES/claude/settings.json ~/.claude/settings.json
+
+# ~/.claude/skills also holds claude.ai-synced skills, so link each skill
+# individually rather than replacing the directory.
+for skill in $DOTFILES/agents/skills/*/; do
+    [ -d "$skill" ] || continue
+    safe_ln "${skill%/}" ~/.claude/skills/$(basename "$skill")
+done
