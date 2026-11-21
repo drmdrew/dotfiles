@@ -1,0 +1,67 @@
+#!/bin/sh
+#
+# gpg-touch - git `gpg.program` wrapper that flags a pending YubiKey touch on the
+# controlling terminal and chimes until the signing op completes, then hands the
+# exit status back unchanged.
+#
+# Why: signing ops that require a YubiKey touch just make the key blink with no
+# terminal indication, so they silently time out. This prints a reminder to
+# /dev/tty (not stdout/stderr) so it shows even when the caller's output is
+# redirected or buried (e.g. under a noisy gradle build), and loops a gentle
+# sound until gpg returns (touch completes or times out).
+#
+# Managed in dotfiles; installed by install.sh (symlinked into ~/.local/bin and
+# wired via `git config --global gpg.program`).
+#
+# Env:
+#   GPG_TOUCH_SOUND       sound looped while waiting (default Submarine);
+#                         set empty to keep the line but mute the sound.
+#   GPG_TOUCH_FAIL_SOUND  sound played once on failure (default Basso);
+#                         set empty to mute the failure sound.
+
+# Resolve the real gpg without recursing into this wrapper (this file is named
+# gpg-touch, not gpg). Prepend common locations so it still works under a
+# minimal PATH (e.g. git launched from a GUI).
+REAL_GPG="$(PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:$PATH" command -v gpg)"
+
+# Only cue for signing ops (git uses -bsau; tools use --sign/--clearsign/
+# --detach-sign). Everything else (verify/list/version) is a transparent exec.
+case " $* " in
+  *-bsau*|*--sign*|*--clearsign*|*--detach-sign*) ;;
+  *) exec "$REAL_GPG" "$@" ;;
+esac
+
+# Loop a gentle cue in the background until gpg returns.
+_snd="${GPG_TOUCH_SOUND-/System/Library/Sounds/Submarine.aiff}"
+
+# Cue only if signing runs longer than 2s; a cached touch returns sooner.
+(
+  sleep 2
+  { printf '\n\033[1;33m🔑  Touch your YubiKey (signing)…\033[0m\n' > /dev/tty; } 2>/dev/null
+  while :; do afplay "$_snd" >/dev/null 2>&1 || break; done
+) &
+_loop_pid=$!
+
+# Stop the loop (and any in-flight afplay) however we exit, including Ctrl-C.
+stop_cue() {
+  [ -n "$_loop_pid" ] || return 0
+  kill "$_loop_pid" 2>/dev/null
+  pkill -P "$_loop_pid" 2>/dev/null
+  _loop_pid=""
+}
+trap stop_cue EXIT INT TERM
+
+# Run the real gpg in the foreground (not exec) so we can stop the cue after.
+"$REAL_GPG" "$@"
+_status=$?
+stop_cue
+
+# On failure (e.g. touch timeout), flag it with a red line + a failure sound.
+if [ "$_status" -ne 0 ]; then
+  { printf '\033[1;31m✗  Signing failed (status %s)\033[0m\n' "$_status" > /dev/tty; } 2>/dev/null
+  _fail="${GPG_TOUCH_FAIL_SOUND-/System/Library/Sounds/Basso.aiff}"
+  if command -v afplay >/dev/null 2>&1 && [ -n "$_fail" ]; then
+    afplay "$_fail" >/dev/null 2>&1 &
+  fi
+fi
+exit "$_status"

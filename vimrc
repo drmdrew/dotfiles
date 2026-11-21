@@ -3,9 +3,23 @@
 " Configure vim to drmdrew's liking. I find spf13-vim has a few too many
 " plugins for my tastes.
 
-" Pre-requisites (for vundle and others)
-set nocompatible              " be iMproved, required
-filetype off                  " required
+"if !empty($VIM_PROFILE)
+"  execute 'profile start /tmp/vim-profile-' . strftime('%H%M%S') . '.log'
+"  profile func *
+"  profile file *
+"endif
+
+
+set nocompatible              " be iMproved
+
+" Do not apply settings embedded in opened files or read project vimrc files
+set nomodeline
+set modelines=0
+set nomodelineexpr
+set noexrc
+
+" No swap or undo copies of secret-bearing files
+autocmd BufNewFile,BufReadPre *.env,.env.*,*.pem,*.key,id_rsa*,id_ed25519*,*credentials*,*secret*,*kubeconfig* setlocal noswapfile noundofile
 
 " vim/neovim compatability
 if has('nvim')
@@ -13,53 +27,33 @@ if has('nvim')
     let &packpath = &runtimepath
 endif
 
-" vundle =====
-" Remember: to bootstrap bundle:
-"   git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
-"
-" set the runtime path to include Vundle and initialize
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
-Plugin 'VundleVim/Vundle.vim'
-Plugin 'flazz/vim-colorschemes'
-Plugin 'scrooloose/nerdtree'
-" Plugin 'scrooloose/syntastic'
-Plugin 'dense-analysis/ale'
-Plugin 'Xuyuanp/nerdtree-git-plugin'
-Plugin 'ap/vim-buftabline'
-Plugin 'vim-airline/vim-airline'
-Plugin 'vim-airline/vim-airline-themes'
-Plugin 'tpope/vim-fugitive'
-Plugin 'tpope/vim-sleuth'
-Plugin 'tpope/vim-unimpaired'
-" Plugin 'git://git.wincent.com/command-t.git'
-Plugin 'fatih/vim-go'
-Plugin 'nsf/gocode', {'rtp': 'vim/'}
-Plugin 'Shougo/neocomplete'
-Plugin 'ntpeters/vim-better-whitespace'
-Plugin 'ctrlp.vim'
-
-call vundle#end()            " required
-filetype plugin indent on    " required
-
 " ==========================================
 " Asynchronous Lint Engine (ALE) Settings
 " ==========================================
 let g:ale_enabled = 1
 
-" Explicitly instruct ALE to pass .toml buffers to the tombi binary.
+" Run only the linters listed here; filetypes not listed get none.
 " This ALE version ships a 'tombi' recipe but no 'taplo' recipe, so naming
 " 'taplo' here produced an empty enabled-linter set and aborted linting.
+let g:ale_linters_explicit = 1
 let g:ale_linters = {
+\   'sh': ['shellcheck'],
 \   'toml': ['tombi'],
 \}
+
+" Prefer global executables over project-local ones (node_modules/.bin, etc.).
+let g:ale_use_global_executables = 1
+
+" Lint on save only, so opening or editing a file in an untrusted repo runs nothing.
+let g:ale_lint_on_enter = 0
+let g:ale_lint_on_filetype_changed = 0
+let g:ale_lint_on_insert_leave = 0
+let g:ale_lint_on_text_changed = 'never'
+let g:ale_lint_on_save = 1
 
 " Customize the indicators displayed in the left-hand gutter column
 let g:ale_sign_error = '❌'
 let g:ale_sign_warning = '⚠️'
-
-" Optional: Automatically run lint checks immediately when text is changed
-let g:ale_lint_on_text_changed = 'normal'
 
 " keep temporary files out of the way
 set backupdir=$HOME/.vim.backup/
@@ -104,7 +98,6 @@ let g:buftabline_numbers=1
 
 " navigation / keyboard mappings
 nnoremap <C-N> :bnext<CR>
-nnoremap <C-P> :bprev<CR>
 
 " indentation/style
 set encoding=utf-8
@@ -140,16 +133,6 @@ set wildignore+=node_modules/*,**/node_modules/*,**/bower_components/*,*.min.js
 
 " diff/merge ====
 autocmd FilterWritePre * if &diff | setlocal wrap< | endif
-
-" syntastic ====
-set statusline+=%#warningmsg#
-set statusline+=%{SyntasticStatuslineFlag()}
-set statusline+=%*
-let g:syntastic_always_populate_loc_list = 1
-let g:syntastic_auto_loc_list = 1
-let g:syntastic_check_on_open = 1
-let g:syntastic_check_on_wq = 0
-let g:syntastic_javascript_checkers=['eslint']
 
 " NERDTree ====
 "  - NERDTree customizations and mappings
@@ -198,12 +181,6 @@ autocmd FileType go nmap <leader>t  <Plug>(go-test)
 autocmd FileType go nmap <Leader>c <Plug>(go-coverage-toggle)
 
 let g:go_list_type = "quickfix"
-
-" angularjs
-let g:syntastic_html_tidy_ignore_errors = ['proprietary attribute']
-""ng-"', 'proprietary attribute "xmlns:ns"']
-", 'proprietary attrbute "xmls-ns"']
-"
 
 "" appearance: color scheme, etc.
 syntax enable

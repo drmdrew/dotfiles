@@ -45,12 +45,6 @@ if [ ! -f ~/.oh-my-zsh/oh-my-zsh.sh ]; then
 fi
 export ZSH=~/.oh-my-zsh
 
-# Path to oh-my-zsh install/customizations if present
-if [ ! -f ~/.vim/bundle ]; then
-  cp -r ~/dotfiles/vim ~/.vim
-  mkdir -p ~/.vim.backup
-fi
-
 # Set name of the oh-my-zsh theme to load.
 # Look in ~/.oh-my-zsh/themes/
 # Optionally, if you set this to "random", it'll load a random theme each
@@ -144,17 +138,6 @@ if [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then . ~/.nix-profile/etc/profile
 # Shopify dev tool (when installed/used by projects)
 [ -f /opt/dev/dev.sh ] && source /opt/dev/dev.sh
 
-# Ruby / chruby
-if [ -e /opt/dev/sh/chruby ]; then
-  [[ -f /opt/dev/sh/chruby/chruby.sh ]] && type chruby >/dev/null 2>&1 || chruby () { source /opt/dev/sh/chruby/chruby.sh; chruby "$@"; }
-elif [ -e /opt/homebrew/opt/chruby/share/chruby/chruby.sh ]; then
-  source /opt/homebrew/opt/chruby/share/chruby/chruby.sh;
-  chruby 3.3.6 # latest
-fi
-
-# Ruby / rbenv
-[ -f /opt/homebrew/bin/rbenv ] && eval "$(rbenv init -)"
-
 # Python
 export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
@@ -184,3 +167,6 @@ autoload -Uz compinit
 compinit
 # End of Docker CLI completions
 eval "$(mise activate zsh)"
+
+
+

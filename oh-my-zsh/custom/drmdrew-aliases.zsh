@@ -1,6 +1,13 @@
+# helpful functions
+
+readheredoc() { IFS= read -r -d '' "$1" || true; }
+
+
+# helpful git functions
 git_main_or_master() {
   echo "$(git remote show origin | sed -n "/HEAD branch/s/.*: //p")"
 }
+
 
 # aliases for git
 alias glog10='git --no-pager log --oneline --decorate --color -10'
@@ -35,6 +42,7 @@ alias cursor-ui='open -a Cursor'
 
 # aliases for searching (ripgrep)
 alias rgh='rg --no-heading -H'
+alias rgv='rg --vimgrep'
 
 # aliases for kubernetes
 alias k='kubectl'
@@ -81,11 +89,15 @@ alias qq='claude-qq'
 # pngsave - save the macOS clipboard image to a per-ISO-week PNG and print its path.
 # Usage: pngsave [base-dir]  (default: $PWD/images). Handy for feeding screenshots to claude.
 pngsave() {
-  local base="${1:-$PWD/images}"
+  local base="${1:-$HOME/notes/2026/images}"
   local dir="${base%/}/$(date +%G-W%V)"
   mkdir -p "$dir"
   local path="$dir/$(date +%Y%m%d-%H%M%S).png"
-  if pngpaste "$path" 2>/dev/null; then print -r -- "$path"
-  else print -u2 "pngsave: no image on clipboard"; return 1; fi
+  if /opt/homebrew/bin/pngpaste "$path"; then
+    print -r -- "${path:a}"
+  else
+    print -u2 -- "pngsave: no image on clipboard (pngpaste failed)"
+    return 1
+  fi
 }
 

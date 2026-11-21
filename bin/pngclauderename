@@ -1,0 +1,76 @@
+#!/bin/bash
+#
+# pngclauderename - rename a PNG to a claude-suggested descriptive name.
+#
+# Asks claude (haiku, headless, read-only) to look at the image and suggest a
+# short snake_case description, then renames the file in place (same
+# directory) to <YYYYMMDD>-<HHMM>-<description>.png. The timestamp prefix is
+# taken from the existing filename when it is pngsave-style (YYYYMMDD-HHMMSS,
+# kept as YYYYMMDD-HHMM), else a bare YYYYMMDD name keeps its day and gains the
+# mtime HHMM, otherwise the file's full mtime date+time is used.
+#
+# Prints two lines:
+#   line 1: the absolute final path
+#   line 2: a markdown image link (path relative to ~/notes/2026 when possible)
+#
+# If claude is unavailable or returns nothing usable the file keeps its name -
+# the two output lines are printed either way.
+#
+# Usage: pngclauderename <png-path>
+
+NOTES_ROOT="$HOME/notes/2026"
+
+src="$1"
+if [ -z "$src" ] || [ ! -f "$src" ]; then
+  echo "usage: pngclauderename <png-path>" >&2
+  exit 1
+fi
+# Absolute path without relying on realpath being installed.
+case "$src" in /*) : ;; *) src="$PWD/$src" ;; esac
+dir="$(dirname "$src")"
+name="$(basename "$src" .png)"
+
+# Timestamp prefix (YYYYMMDD-HHMM): keep it from a pngsave-style
+# YYYYMMDD-HHMMSS name, else keep a bare YYYYMMDD day + mtime HHMM, else use
+# the file's full mtime.
+case "$name" in
+  [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]*)
+    stamp="${name:0:8}-${name:9:4}" ;;
+  [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]*)
+    stamp="${name:0:8}-$(date -r "$src" +%H%M)" ;;
+  *)
+    stamp="$(date -r "$src" +%Y%m%d-%H%M)" ;;
+esac
+
+# Ask claude for a slug. NB: prompt goes via stdin - --allowedTools is
+# variadic and would swallow a trailing positional prompt argument.
+slug="$(echo "Read the image file at $src . Reply with ONLY a filename slug describing it: lowercase snake_case, 3 to 6 words, no dates, no extension, nothing else. Example reply: flaky_test_dashboard_failure_spike" |
+  claude -p --model haiku --allowedTools "Read" 2>/dev/null |
+  tail -n 1 |
+  tr '[:upper:]' '[:lower:]' |
+  tr -cs 'a-z0-9_' '_' |
+  sed -e 's/^_*//' -e 's/_*$//' -e 's/__*/_/g' |
+  cut -c1-60)"
+
+final="$src"
+if [ -n "$slug" ]; then
+  candidate="$dir/$stamp-$slug.png"
+  # Keep a fuller timestamp on collision instead of overwriting.
+  [ -e "$candidate" ] && [ "$candidate" != "$src" ] && candidate="$dir/$name-$slug.png"
+  if [ "$candidate" != "$src" ] && mv "$src" "$candidate"; then
+    final="$candidate"
+  fi
+else
+  echo "pngclauderename: claude gave no usable slug, keeping existing name" >&2
+fi
+
+# Markdown link: relative to ~/notes/2026 when the file lives under it.
+mdpath="$final"
+case "$final" in
+  "$NOTES_ROOT"/*) mdpath="${final#"$NOTES_ROOT"/}" ;;
+esac
+alt="$(basename "$final" .png | sed -e 's/^[0-9][0-9-]*-//' -e 's/_/ /g')"
+[ -n "$alt" ] || alt="screenshot"
+
+echo "$final"
+echo "![$alt]($mdpath)"

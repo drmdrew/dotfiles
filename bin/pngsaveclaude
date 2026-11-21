@@ -1,0 +1,28 @@
+#!/bin/bash
+#
+# pngsaveclaude - pngsave + a claude-suggested descriptive filename.
+#
+# Saves the macOS clipboard image to the same per-ISO-week archive as the
+# pngsave() zsh function, then hands off to pngclauderename to name it
+# (YYYYMMDD-<snake_case_description>.png) and print the path + markdown link.
+#
+# Usage: pngsaveclaude [base-dir]   (default: ~/notes/2026/images)
+
+PNGPASTE=/opt/homebrew/bin/pngpaste
+
+base="${1:-$HOME/notes/2026/images}"
+dir="${base%/}/$(date +%G-W%V)"
+mkdir -p "$dir"
+path="$dir/$(date +%Y%m%d-%H%M%S).png"
+
+if ! "$PNGPASTE" "$path"; then
+  echo "pngsaveclaude: no image on clipboard (pngpaste failed)" >&2
+  exit 1
+fi
+
+# Prefer the sibling script (same dir, works pre-install), else PATH.
+here="$(dirname "$0")"
+if [ -x "$here/pngclauderename" ]; then
+  exec "$here/pngclauderename" "$path"
+fi
+exec pngclauderename "$path"

@@ -1,0 +1,9 @@
+#!/bin/sh
+PATH="/opt/homebrew/bin:$HOME/.local/bin:$PATH"
+
+if ! command -v mise >/dev/null 2>&1; then
+    echo "pre-commit: mise not found; install mise or commit with --no-verify" >&2
+    exit 1
+fi
+
+exec mise run pre-commit

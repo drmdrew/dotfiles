@@ -1,0 +1,19 @@
+[tools]
+gitleaks = "8.30.1"
+trufflehog = "3.99.9"
+
+[tasks.scan-staged]
+description = "Secret scan of staged changes"
+run = "gitleaks git --staged --redact --no-banner -l warn"
+
+[tasks.scan-candidates]
+description = "Secret scan of the working tree"
+run = "gitleaks dir . --redact --no-banner -l warn"
+
+[tasks.scan-history]
+description = "Secret scan of all commits, no verification calls to third parties"
+run = "trufflehog git file://. --no-verification --no-update --fail"
+
+[tasks.pre-commit]
+description = "Checks run by .githooks/pre-commit"
+depends = ["scan-staged"]

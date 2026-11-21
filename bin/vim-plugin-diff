@@ -1,0 +1,79 @@
+#!/bin/bash
+# vim-plugin-diff: show what changes if a plugin in vim/plugins.txt moves to a new commit.
+# Usage: vim-plugin-diff <name> [new-sha]     (FULL=1 prints the whole diff)
+# Without new-sha, uses the newest default-branch commit at least COOLDOWN_DAYS old.
+# Only fetches into the installed clone; vim/plugins.txt is never modified.
+set -euo pipefail
+
+DOTFILES=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+MANIFEST=$DOTFILES/vim/plugins.txt
+DEST=${VIM_PACK_DIR:-$HOME/.vim/pack/plugins/start}
+COOLDOWN_DAYS=${COOLDOWN_DAYS:-4}
+
+name=${1:?usage: vim-plugin-diff <name> [new-sha]}
+new=${2:-}
+
+line=$(awk -v n="$name" '$1 == n' "$MANIFEST")
+if [ -z "$line" ]; then
+    echo "vim-plugin-diff: $name is not in $MANIFEST" >&2
+    exit 1
+fi
+read -r _ url old <<<"$line"
+
+dir=$DEST/$name
+if [ ! -d "$dir/.git" ]; then
+    echo "vim-plugin-diff: $dir is not installed; run bin/vim-plugins first" >&2
+    exit 1
+fi
+
+git -C "$dir" fetch --quiet origin
+
+if [ -z "$new" ]; then
+    new=$(git -C "$dir" rev-list -1 --before="$COOLDOWN_DAYS days ago" origin/HEAD)
+else
+    new=$(git -C "$dir" rev-parse --verify "$new^{commit}")
+fi
+
+if [ -z "$new" ]; then
+    echo "vim-plugin-diff: no candidate commit found" >&2
+    exit 1
+fi
+
+if ! git -C "$dir" merge-base --is-ancestor "$new" origin/HEAD; then
+    echo "vim-plugin-diff: $new is not reachable from the default branch of $url" >&2
+    exit 2
+fi
+
+if [ "$old" = "$new" ]; then
+    echo "$name is already pinned at $new"
+    exit 0
+fi
+
+if ! git -C "$dir" merge-base --is-ancestor "$old" "$new"; then
+    echo "warning: current pin $old is not an ancestor of $new (history rewritten or branch switched)" >&2
+fi
+
+echo "== $name  $url"
+echo "old: $old  ($(git -C "$dir" log -1 --format=%cs "$old"))"
+echo "new: $new  ($(git -C "$dir" log -1 --format=%cs "$new"))"
+echo
+echo "-- commits"
+git -C "$dir" log --no-decorate --format='%h %cs %an  %s' "$old..$new"
+echo
+echo "-- files changed"
+git -C "$dir" diff --stat "$old" "$new"
+echo
+echo "-- added lines matching risky patterns"
+hits=$(git -C "$dir" diff -U0 "$old" "$new" | grep -E '^\+[^+]' | grep -nE 'system\(|systemlist\(|job_start|curl |wget |urlopen|socket|/dev/tcp|base64|eval\(|execute |:!|silent !|py3? |lua ' || true)
+if [ -n "$hits" ]; then
+    printf '%s\n' "$hits" | head -40
+else
+    echo "none"
+fi
+echo
+if [ "${FULL:-}" = "1" ]; then
+    git -C "$dir" diff "$old" "$new"
+else
+    echo "full diff:  git -C $dir diff $old $new"
+fi
+echo "manifest:   $name  $url  $new"
