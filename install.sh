@@ -39,6 +39,9 @@ fi
 ln -v -sf $DOTFILES/bin/pngsaveclaude ~/.local/bin/pngsaveclaude
 ln -v -sf $DOTFILES/bin/pngclauderename ~/.local/bin/pngclauderename
 
+# claude-vi: filter text through Claude with no tools (used by :Claude in vimrc).
+ln -v -sf $DOTFILES/bin/claude-vi ~/.local/bin/claude-vi
+
 # Claude Code personal instructions: ~/.claude/CLAUDE.md is a symlink into this repo.
 mkdir -p ~/.claude
 ln -v -sf $DOTFILES/claude/CLAUDE.md ~/.claude/CLAUDE.md

@@ -1,0 +1,53 @@
+#!/bin/bash
+# claude-vi: run Claude from inside Vim; stdout goes straight into the buffer.
+# Usage: <whole buffer on stdin> | claude-vi --file F --ft TYPE --line1 N --line2 M --range R -- <instruction>
+# Claude gets read-only tools (Read, Grep, Glob) in the repo root of the edited file: no Bash, no edits.
+set -euo pipefail
+trap 'echo "claude-vi: failed at line $LINENO (exit $?)" >&2' ERR
+
+file='' ft='' line1='' line2='' range=0
+while [ $# -gt 0 ]; do
+    case $1 in
+        --file)  file=$2;  shift 2 ;;
+        --ft)    ft=$2;    shift 2 ;;
+        --line1) line1=$2; shift 2 ;;
+        --line2) line2=$2; shift 2 ;;
+        --range) range=$2; shift 2 ;;
+        --)      shift; break ;;
+        *)       break ;;
+    esac
+done
+instruction="$*"
+
+buffer=$(head -c 60000)
+
+dir=$(dirname "${file:-$PWD/.}")
+case "$dir" in
+    */.git|*/.git/*) root=${dir%%/.git*} ;;
+    *) root=$(git -C "$dir" rev-parse --show-toplevel 2>/dev/null || echo "$dir") ;;
+esac
+cd "$root"
+
+if [ "$range" -gt 0 ]; then
+    where="Lines $line1-$line2 are selected; your output REPLACES them."
+else
+    where="Nothing is selected; your output is INSERTED below line $line1."
+fi
+
+status=$(git status --short 2>/dev/null | head -c 20000 || true)
+
+context="File: ${file:-unknown} (filetype: ${ft:-unknown})
+$where
+Your working directory is the repo root: $root
+
+git status --short (run by claude-vi, first 20000 bytes):
+${status:-not a git repository}
+
+Buffer:
+$buffer"
+
+system="You are called from Vim as a text filter. Your whole stdout is written into the buffer as printed. Output only the text to insert or the replacement text: no preface, no explanation, no markdown fences unless the file is markdown. Match the style and filetype around the cursor. Do not ask questions."
+
+exec claude -p --tools "Read,Grep,Glob" --no-session-persistence --append-system-prompt "$system" "$context
+
+Instruction: $instruction" </dev/null

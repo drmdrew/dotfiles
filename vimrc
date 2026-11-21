@@ -125,6 +125,34 @@ endfunction
 command! PasteImage call s:PasteImage()
 autocmd FileType markdown nnoremap <buffer> <leader>p :PasteImage<CR>
 
+" :Claude <instruction> asks claude-vi (read-only Claude) and puts the reply in the buffer:
+" replaces the selected/ranged lines, or inserts below the cursor line when no range is given.
+function! s:Claude(line1, line2, range, instruction) abort
+  let l:args = ['claude-vi', '--file', expand('%:p'), '--ft', &filetype,
+        \ '--line1', a:line1, '--line2', a:line2, '--range', a:range, '--', a:instruction]
+  echo 'claude-vi: working...' | redraw
+  let l:errfile = tempname()
+  " stop at the commit-editor scissors line so the -v diff is never sent; cap long buffers
+  let l:cut = search('^# -\+ >8 -\+$', 'nw')
+  let l:last = min([l:cut > 0 ? l:cut - 1 : line('$'), 2000])
+  let l:out = system(join(map(l:args, 'shellescape(v:val)'), ' ') . ' 2>' . shellescape(l:errfile), join(getline(1, l:last), "\n") . "\n")
+  let l:status = v:shell_error
+  let l:err = filereadable(l:errfile) ? join(readfile(l:errfile, '', 3), ' | ') : ''
+  call delete(l:errfile)
+  if l:status != 0
+    echohl ErrorMsg | echom 'claude-vi failed (exit ' . l:status . '): ' . (l:err !=# '' ? l:err : l:out !=# '' ? l:out : 'no output') | echohl None
+    return
+  endif
+  let l:lines = split(l:out, "\n")
+  if a:range > 0
+    execute a:line1 . ',' . a:line2 . 'delete _'
+    call append(a:line1 - 1, l:lines)
+  else
+    call append(a:line1, l:lines)
+  endif
+endfunction
+command! -range -nargs=+ Claude call s:Claude(<line1>, <line2>, <range>, <q-args>)
+
 " highlight search terms
 set hlsearch
 
