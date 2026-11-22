@@ -1,0 +1,16 @@
+{
+  "name": "excalidraw-skill-renderer",
+  "private": true,
+  "type": "module",
+  "description": "Headless Excalidraw -> .excalidraw.svg/.png renderer for the excalidraw skill",
+  "dependencies": {
+    "@excalidraw/excalidraw": "0.18.0-3a317b5",
+    "@napi-rs/canvas": "1.1.1",
+    "linkedom": "0.18.15",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

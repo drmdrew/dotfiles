@@ -1,0 +1,18 @@
+#!/bin/sh
+# excalidraw - render/extract Excalidraw diagrams (see ../SKILL.md).
+# Builds the bundled renderer on first use (needs node + npm, ~150MB).
+set -eu
+DIR=$(cd "$(dirname "$0")" && pwd)
+BUNDLE="$DIR/dist/render.mjs"
+
+if [ ! -f "$BUNDLE" ] || [ "$DIR/package.json" -nt "$BUNDLE" ] \
+    || [ "$DIR/render.mjs" -nt "$BUNDLE" ] || [ "$DIR/globals.mjs" -nt "$BUNDLE" ]; then
+    echo "excalidraw: building renderer (first run)..." >&2
+    (cd "$DIR" && npm install --no-audit --no-fund --loglevel=error >&2 \
+        && npx esbuild render.mjs --bundle --platform=node --format=esm \
+            --outfile=dist/render.mjs --external:@napi-rs/canvas \
+            --loader:.css=empty --loader:.woff2=empty --log-level=error \
+            "--banner:js=import{createRequire}from'module';const require=createRequire(import.meta.url);" >&2)
+fi
+
+exec node "$BUNDLE" "$@"
