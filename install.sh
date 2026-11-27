@@ -51,3 +51,12 @@ for skill in $DOTFILES/agents/skills/*/; do
     [ -d "$skill" ] || continue
     safe_ln "${skill%/}" ~/.claude/skills/$(basename "$skill")
 done
+
+# Build skills that ship a renderer or other tooling (see mise.toml).
+if command -v mise >/dev/null; then
+    mise trust --quiet "$DOTFILES/mise.toml"
+    mise -C "$DOTFILES" run skills:setup \
+        || echo "warning: some skills failed to build; fix and run: mise run skills:setup" >&2
+else
+    echo "warning: mise not found; install it, then run: mise run skills:setup" >&2
+fi

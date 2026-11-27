@@ -1,0 +1,24 @@
+# Entry point for setting up these dotfiles:
+#
+#   mise trust && mise run install
+#
+# `mise tasks` lists everything.
+
+[tasks.install]
+description = "Symlink dotfiles into ~ and build the agent skills"
+run = "./install.sh"
+
+[tasks."skills:setup"]
+description = "Install and build agent skills that ship tooling (e.g. excalidraw)"
+run = """
+#!/bin/sh
+# A failure (e.g. no network) only affects that skill: report it, carry on.
+status=0
+for dir in agents/skills/*/scripts; do
+    [ -f "$dir/mise.toml" ] || continue
+    mise trust --quiet "$dir/mise.toml"
+    mise -C "$dir" install --quiet
+    mise -C "$dir" run setup || { echo "warning: setup failed in $dir" >&2; status=1; }
+done
+exit $status
+"""

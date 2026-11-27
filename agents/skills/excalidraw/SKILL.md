@@ -4,8 +4,6 @@ description: Draw a hand-drawn style Excalidraw diagram from a description and s
 allowed-tools:
   - Bash(~/.claude/skills/excalidraw/scripts/excalidraw:*)
   - Read
-  - Write
-  - Edit
   - Glob
   - Grep
 ---
@@ -22,7 +20,8 @@ The request: $ARGUMENTS
 **No ad-hoc shell commands.** The only shell command this skill runs is the
 helper, invoked exactly as `~/.claude/skills/excalidraw/scripts/excalidraw ...`
 (one command: no `cd`, `&&`, pipes, redirects or heredocs), which is
-pre-approved. Everything else uses file tools:
+pre-approved. Everything else uses file tools (Write and Edit are not
+pre-approved by this skill):
 
 - To learn about the subject (a repo, config, notes), use Read, Glob and Grep,
   not `ls`, `cat`, `find` or `grep` in the shell.
@@ -68,14 +67,18 @@ else.
 (top-left, pixels, y grows down). With a `label` and no `width`/`height`, the
 shape sizes itself to the text; give `width`/`height` to make shapes in a row
 the same size. Labels wrap to the shape's width, so make it wide enough for the
-longest line.
+longest line: allow about 0.55 x font size per character, plus 40px (more for
+diamonds and ellipses). With a fixed `height`, allow 1.25 x font size per
+line, plus 30px.
 
 **Arrows / lines:** an `arrow` with `start: { "id" }` and `end: { "id" }`
 connects two shapes and is routed between their outlines automatically: leave
 out `x`, `y`, `width`, `height`. Optional: `label`, `strokeStyle: "dashed"`,
 `startArrowhead`/`endArrowhead` (`"arrow"`, `"triangle"`, `"dot"`, `"bar"`,
 `null`). For a free arrow or `line`, give `x`, `y` and
-`points: [[0,0],[dx,dy],...]` instead.
+`points: [[0,0],[dx,dy],...]` instead. Use a free arrow for a loop back to an
+earlier step, which a straight arrow would draw through the shapes in between:
+run it out to a clear margin, up, and back in, ending at the target's edge.
 
 **Text:** `text` elements need `x`, `y`, `text`; optional `fontSize` (default
 20), `textAlign`. Use `\n` for line breaks.
@@ -91,18 +94,34 @@ Palette that reads well: strokes `#1e1e1e`, `#e03131`, `#2f9e44`, `#1971c2`,
 `#f08c00`; fills `#ffc9c9`, `#b2f2bb`, `#a5d8ff`, `#ffec99`, `#d0bfff`,
 `#e9ecef`.
 
-**Layout: portrait.** Make the diagram taller than it is wide, roughly 3:4 to
-1:2 (width:height), and no more than about 1000px wide. A portrait diagram
-zooms to a readable size with zoom-to-fit (Shift+1) in the Excalidraw editor;
-a wide one ends up around 20%. To get there:
+**Layout: fit the destination.** Pick a `--fit` target from the request, and
+use `default` if it doesn't say. Canvas sizes include a 20px margin all round.
 
-- Make top-to-bottom the main flow. Use left-to-right only within a row, and
-  keep rows to 2-3 shapes.
-- Stack groups (lanes, phases, alternatives) above one another, not side by
-  side.
-- Put the end of a flow (a shared destination, a result) below the rows that
-  lead to it, not in a column to their right.
-- Break long labels with `\n` (under about 50 characters per line).
+| `--fit` | Use for | Shape | Canvas | Text |
+|---|---|---|---|---|
+| `default` | anything unspecified | about 3:2 | up to 1000x670 | 20px |
+| `slide` | slides, presentations | about 16:9 | up to 1100x620 | 24px (`label.fontSize` too) |
+| `github` | PRs, issues, READMEs | 4:3 to 16:9 | up to 1000 wide, under 700 tall if possible | 20px |
+| `doc` | long, scrolling pages, only when asked for portrait | taller than wide | up to 1000 wide | 20px |
+
+- **Limit the content:** aim for about 12 shapes or fewer. Merge minor steps,
+  drop implementation detail, or split into two diagrams. Don't shrink text to
+  make more fit.
+- **One main path:** make it easy to follow, with side branches off it.
+- **Wrap long flows** instead of making one long column or row: 2-3 rows of
+  3-4 shapes, each read left to right, or lanes grouped by who does the work.
+  For `doc`, flow top to bottom instead.
+- **Break long labels** with `\n`.
+
+**Routing:**
+
+- Avoid crossing arrows first; then use as few bends as possible. Reorder
+  shapes before adding bends.
+- Align shapes before connecting them: neighbours that share a center line get
+  a straight arrow.
+- To wrap from the end of one row to the start of the next, use a free arrow
+  with right-angle `points` through the gap between the rows.
+- Run a loop back around the outside, and try to have only one.
 
 **No explanatory text unless asked.** Don't add footnotes, captions, legends
 or side notes that explain the diagram. If it needs a paragraph to be
@@ -111,18 +130,27 @@ meaning. A title, and short headings that name a group or lane, are fine.
 If the user asks for notes, put them below the diagram, not in a right-hand
 margin.
 
-Keep a clear grid: about 80-120px between shapes, rows and columns aligned.
+Keep a clear grid: rows and columns aligned, about 60-100px between shapes
+(a labelled horizontal arrow needs about 100px, more for long labels).
 Fewer, larger elements beat dense ones. Use colour to group, not to decorate.
 
 ## 3. Render and check it
 
 ```sh
-~/.claude/skills/excalidraw/scripts/excalidraw <tmp>/diagram.json images/<name>.excalidraw.svg --new --preview <tmp>/preview.png
+~/.claude/skills/excalidraw/scripts/excalidraw <tmp>/diagram.json images/<name>.excalidraw.svg --new --preview <tmp>/preview.png --fit default
 ```
 
 Use an absolute output path (or one relative to the current directory). The
-helper prints the path it wrote. The first run installs and builds the renderer
-(needs `node` and `npm`, about a minute); later runs take a second or two.
+helper only writes inside the current directory or a temp directory, never to
+hidden files or directories or through a symlinked file. Output names must end
+in `.excalidraw.svg` or `.excalidraw.png`, `--preview` in `.png`, and `--out`
+must be a `.excalidraw` file or `scene.json`. If it refuses a path, tell the
+user; don't work around it. The
+helper prints the path it wrote; a render takes a second or two.
+
+If the helper says the renderer is not built or out of date, stop: tell the
+user to run the `mise ... run setup` command it names, and render once they
+have. Don't run `mise`, `npm` or the build yourself.
 The default `--theme auto` makes an SVG that is light, and switches to
 Excalidraw's dark look when the viewer prefers dark (VS Code dark themes, OS
 dark mode). Use `--theme light` or `--theme dark` only when the user asks for a
@@ -131,12 +159,17 @@ fixed look. PNGs can't switch, so `auto` renders them, and the preview, light.
 Look at the preview PNG with the Read tool. To fix something, Edit the JSON
 file and re-render without `--new`. Fix and re-render if text is clipped or wrapped
 awkwardly, shapes overlap, arrows cross shapes or labels, or the layout is
-unbalanced. A `warning: arrows bound at only one end` means an arrow `id`
-didn't match a shape.
+unbalanced. The helper stops with an error if an arrow names an `id` that
+doesn't exist. A `warning: arrow "a->b": end is not bound to "b"` means the
+arrow doesn't reach that shape: check its `points`, or whether the two shapes
+overlap. (Arrows without an `id` are named after the shapes they connect.)
 
-The helper also prints the diagram's size (`size: 820x1180 (portrait)`). A
-`warning: landscape` means the diagram is wider than it is tall: rearrange it
-per **Layout** and re-render, unless the user asked for a wide diagram.
+The helper also prints how the diagram will look at its `--fit` target (`size:
+1000x640 (1.56:1); fit default: shown at 830x531px, smallest text 16.6px`).
+Fix any warning about text size, shape or height per **Layout** and re-render,
+unless the user asked for that shape. If it can't be fixed without losing
+content the user asked for, say so in the report. Pass the same `--fit` on every
+render.
 
 ## 4. Report
 

@@ -1,15 +1,16 @@
 // Render an Excalidraw diagram to .excalidraw.svg / .excalidraw.png with the
 // scene embedded, so it previews as an image and reopens in Excalidraw.
 //
-//   render.mjs <input.json> <output.excalidraw.svg|png> [--new] [--preview out.png] [--theme auto|light|dark]
-//   render.mjs --extract <file.excalidraw.svg|png|excalidraw>   (prints scene JSON)
+//   render.mjs <input.json> <output.excalidraw.svg|png> [--new] [--preview out.png] [--theme auto|light|dark] [--fit default|slide|github|doc]
+//   render.mjs --extract <file.excalidraw|svg|png> [--out <x.excalidraw|scene.json>]
 //
 // <input.json> is either an element skeleton ({ "elements": [...] }, see
 // SKILL.md) or a full scene ({ "type": "excalidraw", ... }).
 import { setAssetPath } from "./globals.mjs";
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { inflateSync } from "node:zlib";
 
 import { GlobalFonts, createCanvas, Image, Path2D } from "@napi-rs/canvas";
@@ -45,10 +46,51 @@ const preview = flag("--preview");
 const theme = flag("--theme") ?? "auto";
 if (!["auto", "light", "dark"].includes(theme)) fail(`--theme must be auto, light or dark`);
 const isNew = bool("--new");
+// Where the diagram will be shown. `box` is the space it's scaled down to fit
+// (CSS px; points for a slide), `minText` the smallest readable text there,
+// `ratio` the width:height range and `maxHeight` the tallest it should show.
+const SCREEN = { box: [830, Infinity], minText: 14, unit: "px" };
+const FITS = {
+  default: { ...SCREEN, ratio: [1.2, 2], maxHeight: 700 },
+  slide: { box: [880, 470], minText: 18, unit: "pt", ratio: [1.4, 2.1] },
+  github: { ...SCREEN, maxHeight: 700 },
+  doc: SCREEN,
+};
+const fit = flag("--fit") ?? "default";
+if (!Object.hasOwn(FITS, fit)) fail(`--fit must be ${Object.keys(FITS).join(", ")}`);
 let [input, output] = args;
 
 // Create parent directories so callers never need a separate mkdir.
 const ensureDir = (file) => mkdirSync(dirname(file), { recursive: true });
+
+// --- write guard ---------------------------------------------------------------
+
+// The helper runs without a permission prompt, so it limits what it can write.
+const lstat = (file) => lstatSync(file, { throwIfNoEntry: false });
+const within = (root, file) => {
+  const rel = relative(root, file);
+  return rel !== ".." && !rel.startsWith(`..${sep}`) && !isAbsolute(rel);
+};
+const WRITE_ROOTS = [process.cwd(), tmpdir(), "/tmp"].map((dir) => realpathSync(dir));
+
+// Returns the symlink-free path to write to, or exits.
+const safeTarget = (file) => {
+  let dir = resolve(file);
+  if (lstat(dir)?.isSymbolicLink()) fail(`refusing to write through a symlink: ${file}`);
+  const missing = [];
+  while (!lstat(dir)) {
+    missing.unshift(basename(dir));
+    dir = dirname(dir);
+  }
+  const real = join(realpathSync(dir), ...missing);
+  if (real.split(sep).some((part) => part.startsWith("."))) {
+    fail(`refusing to write to a hidden file or directory: ${real}`);
+  }
+  if (!WRITE_ROOTS.some((root) => within(root, real))) {
+    fail(`refusing to write outside the current or a temp directory: ${real}`);
+  }
+  return real;
+};
 
 // --new: never overwrite; foo.excalidraw.svg -> foo-2.excalidraw.svg, -3, ...
 const freeName = (file) => {
@@ -67,7 +109,7 @@ const decodeEncoded = (data) => {
   return JSON.parse((data.compressed ? inflateSync(bytes) : bytes).toString());
 };
 
-const readScene = (file) => {
+const decodeScene = (file) => {
   const buf = readFileSync(file);
   if (file.endsWith(".png")) {
     for (let o = 8; o < buf.length; ) {
@@ -94,11 +136,37 @@ const readScene = (file) => {
   return JSON.parse(text);
 };
 
-if (extract) {
+const isScene = (scene) => scene?.type === "excalidraw" && Array.isArray(scene.elements);
+const readScene = (file) => {
+  if (![file, realpathSync(file)].every((f) => /\.(excalidraw|svg|png)$/.test(f))) {
+    fail("--extract takes a .excalidraw, .svg or .png file");
+  }
+  const scene = decodeScene(file);
+  if (!isScene(scene)) fail(`${file} is not a valid Excalidraw scene`);
+  return scene;
+};
+
+// A flag given without a value must not fall through to another mode.
+for (const name of ["--extract", "--out", "--preview", "--theme", "--fit"]) {
+  if (process.argv.at(-1) === name) fail(`${name} needs a value`);
+}
+
+if (extract !== undefined) {
   const json = JSON.stringify(readScene(extract), null, 2) + "\n";
-  if (out) {
-    ensureDir(out);
-    writeFileSync(out, json);
+  if (out !== undefined) {
+    const target = safeTarget(out);
+    if (!target.endsWith(".excalidraw") && basename(target) !== "scene.json") {
+      fail("--out must be a .excalidraw file or scene.json");
+    }
+    if (existsSync(target)) {
+      let old;
+      try {
+        old = JSON.parse(readFileSync(target, "utf8"));
+      } catch {}
+      if (!isScene(old)) fail(`refusing to overwrite a file that is not a scene: ${out}`);
+    }
+    ensureDir(target);
+    writeFileSync(target, json);
     console.log(out);
   } else {
     process.stdout.write(json);
@@ -106,12 +174,17 @@ if (extract) {
   process.exit(0);
 }
 
-if (!input || !output || !/\.(svg|png)$/.test(output)) {
-  fail("usage: render.mjs <input.json> <out.excalidraw.svg|png> [--new] [--preview out.png] [--theme auto|light|dark]");
+if (!input || !output || !/\.excalidraw\.(svg|png)$/.test(output)) {
+  fail("usage: render.mjs <input.json> <out.excalidraw.svg|png> [--new] [--preview out.png] [--theme auto|light|dark] [--fit default|slide|github|doc]");
 }
 if (isNew) output = freeName(output);
-ensureDir(output);
-if (preview) ensureDir(preview);
+// check every target before writing any of them
+const outputPath = safeTarget(output);
+const previewPath = preview === undefined ? undefined : safeTarget(preview);
+if (!/\.excalidraw\.(svg|png)$/.test(outputPath)) fail("output must be .excalidraw.svg or .excalidraw.png");
+if (previewPath && !previewPath.endsWith(".png")) fail("--preview must be a .png file");
+ensureDir(outputPath);
+if (previewPath) ensureDir(previewPath);
 
 // --- fonts -------------------------------------------------------------------
 
@@ -166,20 +239,50 @@ const routeArrows = (skeleton, laidOut) => {
     if (!from || !to) continue;
     const [sx, sy] = edgePoint(from, center(to));
     const [ex, ey] = edgePoint(to, center(from));
-    Object.assign(el, { x: sx, y: sy, width: ex - sx, height: ey - sy });
+    // excalidraw replaces a width of 0 with its default (100), which would
+    // slant a vertical arrow
+    Object.assign(el, { x: sx, y: sy, width: ex - sx || 0.001, height: ey - sy });
   }
   return skeleton;
+};
+
+// Give unnamed arrows an id that says what they connect, so warnings can be
+// traced back to the input.
+const nameArrows = (skeleton) => {
+  const used = new Set(skeleton.map((el) => el.id));
+  for (const el of skeleton) {
+    if (el.type !== "arrow" || el.id) continue;
+    const base = `${el.start?.id ?? "free"}->${el.end?.id ?? "free"}`;
+    let id = base;
+    for (let n = 2; used.has(id); n++) id = `${base}#${n}`;
+    used.add(id);
+    el.id = id;
+  }
 };
 
 // --- convert -----------------------------------------------------------------
 
 const src = JSON.parse(readFileSync(input, "utf8"));
 let elements;
+// arrow ends the skeleton asked to bind: [arrow id, "start"|"end", shape id]
+const requested = [];
 if (src.type === "excalidraw") {
   elements = src.elements;
 } else {
   const skeleton = src.elements ?? src;
   if (!Array.isArray(skeleton)) fail("input must be { \"elements\": [...] } or a full scene");
+  nameArrows(skeleton);
+  const ids = new Set(skeleton.map((el) => el.id));
+  for (const el of skeleton) {
+    if (el.type !== "arrow") continue;
+    for (const end of ["start", "end"]) {
+      const shape = el[end]?.id;
+      if (shape === undefined) continue;
+      // excalidraw would carry on and produce broken geometry
+      if (!ids.has(shape)) fail(`arrow "${el.id}": ${end} id "${shape}" doesn't match any element`);
+      requested.push([el.id, end, shape]);
+    }
+  }
   // pass 1 sizes shapes around their labels (snugly, so pad them), pass 2
   // routes arrows between the final shapes
   const laidOut = convertToExcalidrawElements(
@@ -212,11 +315,12 @@ const environment = {
   document: globalThis.document,
   loadFonts: async () => {},
 };
+const PADDING = 20;
 const config = {
   embedScene: true,
   environment,
   theme: theme === "auto" ? "light" : theme,
-  exportPadding: 20,
+  exportPadding: PADDING,
 };
 
 // Excalidraw's own dark export is the light drawing under this filter, so
@@ -235,35 +339,55 @@ const writePng = async (file) => {
 
 if (output.endsWith(".svg")) {
   const svg = await exportScene({ type: "svg", data, config });
-  writeFileSync(output, theme === "auto" ? withAutoTheme(svg.outerHTML) : svg.outerHTML);
+  writeFileSync(outputPath, theme === "auto" ? withAutoTheme(svg.outerHTML) : svg.outerHTML);
 } else {
-  await writePng(output);
+  await writePng(outputPath);
 }
-if (preview) await writePng(preview);
+if (previewPath) await writePng(previewPath);
 
-const unbound = elements.filter(
-  (el) => el.type === "arrow" && ((el.startBinding == null) !== (el.endBinding == null)),
-);
-if (unbound.length) {
-  console.error(`warning: arrows bound at only one end: ${unbound.map((el) => el.id).join(", ")}`);
+const finalById = new Map(elements.map((el) => [el.id, el]));
+for (const [arrow, end, shape] of requested) {
+  if (finalById.get(arrow)?.[`${end}Binding`]?.elementId !== shape) {
+    console.error(`warning: arrow "${arrow}": ${end} is not bound to "${shape}"`);
+  }
 }
 
-// Scene size, so a too-wide (landscape) layout gets noticed. Lines and arrows
-// span their points; everything else its box.
+// How the diagram will look at its destination, so a poor shape or tiny text
+// gets noticed. Lines and arrows span their points; everything else its box.
 const xs = [];
 const ys = [];
+const fontSizes = [];
 for (const el of elements) {
   if (el.isDeleted) continue;
+  if (el.type === "text") fontSizes.push(el.fontSize);
   const pts = el.points ?? [[0, 0], [el.width, el.height]];
   for (const [px, py] of pts) {
     xs.push(el.x + px);
     ys.push(el.y + py);
   }
 }
-const w = Math.round(Math.max(...xs) - Math.min(...xs));
-const h = Math.round(Math.max(...ys) - Math.min(...ys));
-console.error(`size: ${w}x${h} (${w > h ? "landscape" : "portrait"})`);
-if (w > h) console.error("warning: landscape - the skill prefers portrait diagrams (taller than wide)");
+const w = Math.round(Math.max(...xs) - Math.min(...xs)) + 2 * PADDING;
+const h = Math.round(Math.max(...ys) - Math.min(...ys)) + 2 * PADDING;
+const { box, minText, unit, ratio, maxHeight } = FITS[fit];
+// slides scale to fill their space; web pages never enlarge an image
+const scale = Math.min(box[0] / w, box[1] / h, unit === "pt" ? Infinity : 1);
+const shape = w / h;
+const text = fontSizes.length ? Math.min(...fontSizes) * scale : undefined;
+const shown = `${Math.round(w * scale)}x${Math.round(h * scale)}${unit}`;
+console.error(
+  `size: ${w}x${h} (${shape.toFixed(2)}:1); fit ${fit}: shown at ${shown}` +
+    (text === undefined ? "" : `, smallest text ${text.toFixed(1)}${unit}`),
+);
+if (text < minText) {
+  console.error(`warning: text too small for ${fit} (under ${minText}${unit}): shrink the canvas or enlarge the text`);
+}
+if (ratio && (shape < ratio[0] || shape > ratio[1])) {
+  const problem = shape < ratio[0] ? "too tall" : "too wide";
+  console.error(`warning: ${problem} for ${fit} (aim for ${ratio[0]}:1 to ${ratio[1]}:1)`);
+}
+if (maxHeight && h * scale > maxHeight) {
+  console.error(`warning: shown over ${maxHeight}px tall, so readers have to scroll`);
+}
 
 console.log(output);
 // the bundle leaves handles open that keep Node alive for ~a minute

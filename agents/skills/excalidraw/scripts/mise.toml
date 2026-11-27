@@ -1,0 +1,26 @@
+# Toolchain and build for the excalidraw renderer. Run `mise run setup` here
+# (or `mise run skills:setup` from the dotfiles root) after cloning, pulling a
+# dependency update, or editing render.mjs / globals.mjs. The excalidraw
+# wrapper never builds; it asks for this instead.
+
+[tools]
+node = "26"
+
+[tasks.setup]
+description = "Install and build the excalidraw renderer (~150MB)"
+run = """
+#!/bin/sh
+set -eu
+npm ci --ignore-scripts --no-audit --no-fund --loglevel=error
+mkdir -p dist
+./node_modules/.bin/esbuild render.mjs --bundle --platform=node --format=esm \
+    --outfile=dist/render.mjs.tmp --external:@napi-rs/canvas \
+    --loader:.css=empty --loader:.woff2=empty --log-level=error \
+    "--banner:js=import{createRequire}from'module';const require=createRequire(import.meta.url);"
+mv dist/render.mjs.tmp dist/render.mjs
+# The wrapper runs this node directly, so rendering doesn't depend on mise
+# being active, trusted, or run from this directory.
+command -v node > dist/node
+./stamp > dist/stamp
+echo "setup: built $PWD/dist/render.mjs with node $(node --version)"
+"""

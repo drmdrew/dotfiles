@@ -1,18 +1,24 @@
 #!/bin/sh
 # excalidraw - render/extract Excalidraw diagrams (see ../SKILL.md).
-# Builds the bundled renderer on first use (needs node + npm, ~150MB).
+# Only runs the built renderer; it never installs or builds. `mise run setup`
+# in this directory does that, and records which node to use in dist/node.
 set -eu
 DIR=$(cd "$(dirname "$0")" && pwd)
 BUNDLE="$DIR/dist/render.mjs"
+SETUP="mise -C $DIR run setup"
 
-if [ ! -f "$BUNDLE" ] || [ "$DIR/package.json" -nt "$BUNDLE" ] \
-    || [ "$DIR/render.mjs" -nt "$BUNDLE" ] || [ "$DIR/globals.mjs" -nt "$BUNDLE" ]; then
-    echo "excalidraw: building renderer (first run)..." >&2
-    (cd "$DIR" && npm install --no-audit --no-fund --loglevel=error >&2 \
-        && npx esbuild render.mjs --bundle --platform=node --format=esm \
-            --outfile=dist/render.mjs --external:@napi-rs/canvas \
-            --loader:.css=empty --loader:.woff2=empty --log-level=error \
-            "--banner:js=import{createRequire}from'module';const require=createRequire(import.meta.url);" >&2)
+if [ ! -f "$BUNDLE" ] || [ ! -f "$DIR/dist/stamp" ] || [ ! -f "$DIR/dist/node" ]; then
+    echo "excalidraw: renderer not built: ask the user to run: $SETUP" >&2
+    exit 2
+fi
+if [ "$("$DIR/stamp")" != "$(cat "$DIR/dist/stamp")" ]; then
+    echo "excalidraw: renderer out of date: ask the user to run: $SETUP" >&2
+    exit 2
+fi
+NODE=$(cat "$DIR/dist/node")
+if [ ! -x "$NODE" ]; then
+    echo "excalidraw: node not found at $NODE: ask the user to run: $SETUP" >&2
+    exit 2
 fi
 
-exec node "$BUNDLE" "$@"
+exec "$NODE" "$BUNDLE" "$@"

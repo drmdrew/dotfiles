@@ -1,0 +1,7 @@
+#!/bin/sh
+# stamp - print a checksum of the renderer's sources, dependencies and toolchain.
+# `mise run setup` saves it to dist/stamp; the wrapper compares it to spot a
+# stale build.
+set -eu
+cd "$(dirname "$0")"
+cat mise.toml package.json package-lock.json render.mjs globals.mjs | cksum

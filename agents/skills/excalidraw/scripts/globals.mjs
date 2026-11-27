@@ -60,14 +60,16 @@ globalThis.FontFace ??= class FontFace {
 };
 
 // Serve fonts from the local package; never hit the network.
+let assetRoot;
 globalThis.fetch = async (url) => {
-  const href = String(url);
-  if (href.startsWith("file:")) {
+  const href = new URL(String(url)).href;
+  if (assetRoot && href.startsWith(assetRoot)) {
     return new Response(await readFile(fileURLToPath(href)), { status: 200 });
   }
   throw new Error(`network disabled: ${href}`);
 };
 
 export const setAssetPath = (dir) => {
-  globalThis.window.EXCALIDRAW_ASSET_PATH = pathToFileURL(dir + "/").href;
+  assetRoot = pathToFileURL(dir + "/").href;
+  globalThis.window.EXCALIDRAW_ASSET_PATH = assetRoot;
 };
